@@ -1,0 +1,36 @@
+/* Дополнительные стили для карты */
+.leaflet-container {
+  border-radius: 0.5rem;
+}
+
+/* Стили для popup'ов */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Убираем outline у карты при фокусе */
+.leaflet-container:focus {
+  outline: none;
+}
+
+/* Стили для кнопок управления картой */
+.leaflet-control-zoom a {
+  border-radius: 4px;
+}
+
+.leaflet-control-zoom a:first-child {
+  border-bottom: 1px solid #ccc;
+}
+
+/* Адаптивность карты */
+@media (max-width: 768px) {
+  .leaflet-control-zoom {
+    margin-left: 5px !important;
+    margin-top: 5px !important;
+  }
+}

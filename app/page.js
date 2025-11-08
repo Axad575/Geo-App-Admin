@@ -1,65 +1,140 @@
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { getAnalytics } from "firebase/analytics";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { sendEmailVerification } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { app, db } from "./api/firebase";
+import { useStrings } from "./hooks/useStrings";
+
 
 export default function Home() {
+  const router = useRouter();
+  const auth = getAuth(app);
+  
+  const { t } = useStrings();
+  const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Проверяем, что мы в браузере
+    if (typeof window !== "undefined") {
+      import("firebase/analytics").then(({ getAnalytics }) => {
+        const analytics = getAnalytics(app);
+        console.log("Firebase Analytics initialized:", analytics);
+      });
+    }
+  }, []);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    setLoading(true);
+    
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      while (auth.currentUser) {
+        if (!auth.currentUser.emailVerified) {
+          await sendEmailVerification(auth.currentUser);
+          window.alert(t('auth.emailVerification'));
+          await auth.signOut();
+          router.push('/');
+        } else {
+          router.push('/pages/homeScreen');
+        }
+        break;
+      }
+    } catch (error) {
+      window.alert(t('auth.loginError') + ': ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    const name = e.target.name.value;
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    const confirmPassword = e.target.confirmPassword.value;
+
+    if (password !== confirmPassword) {
+      window.alert(t('auth.passwordMismatch'));
+      return;
+    }
+
+    if (password.length < 6) {
+      window.alert(t('auth.passwordTooShort'));
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      // Создаем пользователя
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Обновляем профиль пользователя
+      await updateProfile(user, {
+        displayName: name
+      });
+
+      // Сохраняем данные пользователя в Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        name: name,
+        email: email,
+        createdAt: new Date(),
+        role: 'user',
+        organizationId: null
+      });
+
+      // Отправляем письмо для подтверждения
+      await sendEmailVerification(user);
+      
+      window.alert(t('auth.registerSuccess') + ' ' + t('auth.emailVerification'));
+      await auth.signOut();
+      setIsLogin(true); // Переключаем на форму входа
+      
+    } catch (error) {
+      window.alert(t('auth.registerError') + ': ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="flex min-h-screen flex-col items-center justify-between p-24 bg-white">
+      <div className="w-1/3 border-2 border-gray-300 rounded-xl shadow-lg bg-white">
+      <h1 className="text-3xl font-semibold text-center rounded-t-xl p-4 bg-green-800 text-white  mb-10"> Geo-App</h1>
+      <form onSubmit={handleLogin} className="flex flex-col space-y-4 p-4">
+        <h2 className="text-lg font-medium text-gray-900">{t('auth.email')}:</h2>
+        <input
+          type="email"
+          placeholder={t('auth.emailPlaceholder')}
+          className="border border-gray-300 p-2 rounded bg-white text-gray-900 placeholder-gray-500"
+          id="email" name="email" required
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+        <h2 className="text-lg font-medium text-gray-900">{t('auth.password')}:</h2>
+        <input
+          type="password"
+          placeholder={t('auth.passwordPlaceholder')}
+          className="border border-gray-300 p-2 rounded bg-white text-gray-900 placeholder-gray-500"
+          id="password" name="password" required
+        />
+        <button
+          type="submit"
+          className="bg-green-800 text-white p-2 rounded hover:bg-green-700 mb-4"
+        >
+          {t('auth.login')}
+        </button>
+        <p className="text-sm text-center text-gray-600">{t('auth.termsText')}</p>
+        <p className="text-sm text-center text-gray-600">abdu1axad © 2025</p>
+      </form>
+      </div>
     </div>
   );
 }
