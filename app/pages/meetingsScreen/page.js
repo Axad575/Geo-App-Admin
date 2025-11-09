@@ -218,59 +218,18 @@ export default function Meetings() {
     return true;
   });
 
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'scheduled': return 'bg-blue-100 text-blue-800';
-      case 'in progress': return 'bg-yellow-100 text-yellow-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'postponed': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'scheduled': return (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      );
-      case 'in progress': return (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      );
-      case 'completed': return (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-        </svg>
-      );
-      case 'cancelled': return (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      );
-      default: return (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      );
-    }
-  };
-
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex bg-gray-50 min-h-screen">
       <Sidebar />
       <div className="flex-1">
         <Navbar />
-        <div className="p-8">
+        <div className="p-6">
           {/* Header */}
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <div className="mb-6">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Управление встречами</h1>
-                <p className="text-gray-600 mt-2">Планирование и отслеживание встреч организации</p>
+                <h1 className="text-2xl font-bold text-gray-900">Встречи</h1>
+                <p className="text-gray-600">Управление встречами организации</p>
               </div>
               <button
                 onClick={() => {
@@ -278,27 +237,24 @@ export default function Meetings() {
                   resetForm();
                   setIsModalOpen(true);
                 }}
-                className="bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl font-medium shadow-lg transition-all duration-200 flex items-center gap-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Добавить встречу
+                + Добавить встречу
               </button>
             </div>
           </div>
 
           {/* Organization Selector & Filters */}
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <div className="bg-white border rounded-lg p-4 mb-6">
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-end">
               <div className="flex-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Организация
                 </label>
                 <select
                   value={selectedOrg}
                   onChange={(e) => setSelectedOrg(e.target.value)}
-                  className="w-full md:w-80 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white shadow-sm appearance-none cursor-not-allowed"
+                  className="w-full md:w-80 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled
                 >
                   <option value="">— Выберите организацию —</option>
@@ -310,22 +266,19 @@ export default function Meetings() {
                 </select>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   onClick={() => {
                     setTempFilters(filters);
                     setFilterModalOpen(true);
                   }}
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
-                  </svg>
                   Фильтры
                 </button>
                 <button
                   onClick={() => setFilters({ title: '', owner: '', status: '', location: '' })}
-                  className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-3 rounded-lg font-medium transition-colors"
+                  className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg"
                 >
                   Сбросить
                 </button>
@@ -334,14 +287,14 @@ export default function Meetings() {
           </div>
 
           {/* Meetings Table */}
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white border rounded-lg">
+            <div className="px-4 py-3 border-b">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-medium text-gray-900">
                   Встречи ({filteredMeetings.length})
                 </h2>
                 {selectedOrg && (
-                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
                     {orgs.find(o => o.id === selectedOrg)?.name || selectedOrg}
                   </span>
                 )}
@@ -349,20 +302,11 @@ export default function Meetings() {
             </div>
 
             {loading ? (
-              <div className="p-12 text-center">
-                <div className="inline-flex items-center px-4 py-2 font-semibold leading-6 text-sm shadow rounded-md text-green-500 bg-white transition ease-in-out duration-150 cursor-not-allowed">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Загрузка встреч...
-                </div>
+              <div className="p-8 text-center">
+                <div className="text-gray-500">Загрузка встреч...</div>
               </div>
             ) : filteredMeetings.length === 0 ? (
-              <div className="p-12 text-center">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+              <div className="p-8 text-center">
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Нет встреч</h3>
                 <p className="text-gray-500 mb-4">
                   {selectedOrg ? 'В выбранной организации пока нет запланированных встреч' : 'Выберите организацию для просмотра встреч'}
@@ -374,7 +318,7 @@ export default function Meetings() {
                       resetForm();
                       setIsModalOpen(true);
                     }}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                   >
                     Запланировать первую встречу
                   </button>
@@ -385,30 +329,24 @@ export default function Meetings() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Встреча</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Дата и время</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Статус</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Организатор</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Участники</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Действия</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Встреча</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата и время</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Организатор</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Участники</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Действия</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredMeetings.map((meeting) => (
-                      <tr key={meeting.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
+                      <tr key={meeting.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3">
                           <div>
                             <div className="text-sm font-medium text-gray-900">{meeting.title}</div>
-                            <div className="text-sm text-gray-500 flex items-center gap-1">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
-                              {meeting.location || 'Место не указано'}
-                            </div>
+                            <div className="text-sm text-gray-500">{meeting.location || 'Место не указано'}</div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-4 py-3 text-sm text-gray-900">
                           {meeting.datetime ? new Date(meeting.datetime).toLocaleDateString('ru-RU', {
                             year: 'numeric',
                             month: 'short',
@@ -417,64 +355,35 @@ export default function Meetings() {
                             minute: '2-digit'
                           }) : '—'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(meeting.status)}`}>
-                            {getStatusIcon(meeting.status)}
+                        <td className="px-4 py-3">
+                          <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
                             {meeting.status || 'scheduled'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-4 py-3 text-sm text-gray-900">
                           {usersList.find(u => u.id === meeting.owner)?.name || meeting.owner || '—'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <div className="flex -space-x-2">
-                            {(meeting.participants || []).slice(0, 3).map((pid, index) => {
-                              const user = usersList.find(u => u.id === pid);
-                              return (
-                                <div
-                                  key={pid}
-                                  className="w-8 h-8 bg-linear-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-white"
-                                  title={user?.name || user?.email || pid}
-                                >
-                                  {(user?.name || 'U').charAt(0).toUpperCase()}
-                                </div>
-                              );
-                            })}
-                            {meeting.participants?.length > 3 && (
-                              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-xs font-semibold border-2 border-white">
-                                +{meeting.participants.length - 3}
-                              </div>
-                            )}
-                          </div>
+                        <td className="px-4 py-3 text-sm text-gray-900">
+                          {(meeting.participants || []).length} чел.
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => viewMeeting(meeting)}
-                              className="text-green-600 hover:text-green-900 font-medium flex items-center gap-1 px-3 py-1 rounded-md hover:bg-green-50 transition-colors"
+                              className="text-blue-600 hover:text-blue-900 text-sm"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
                               Просмотр
                             </button>
                             <button
                               onClick={() => startEdit(meeting)}
-                              className="text-blue-600 hover:text-blue-900 font-medium flex items-center gap-1 px-3 py-1 rounded-md hover:bg-blue-50 transition-colors"
+                              className="text-blue-600 hover:text-blue-900 text-sm"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
                               Изменить
                             </button>
                             <button
                               onClick={() => handleDeleteMeeting(meeting.id)}
-                              className="text-red-600 hover:text-red-900 font-medium flex items-center gap-1 px-3 py-1 rounded-md hover:bg-red-50 transition-colors"
+                              className="text-red-600 hover:text-red-900 text-sm"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
                               Удалить
                             </button>
                           </div>
@@ -492,87 +401,55 @@ export default function Meetings() {
       {/* View Meeting Modal */}
       {viewModalOpen && viewingMeeting && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Просмотр встречи</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Просмотр встречи</h2>
                 <button
                   onClick={() => setViewModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  ×
                 </button>
               </div>
             </div>
 
-            <div className="p-6 space-y-6">
-              {/* Основная информация */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Название встречи</label>
-                  <div className="text-lg font-medium text-gray-900">{viewingMeeting.title}</div>
-                </div>
-                
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Название встречи</label>
+                <div className="text-gray-900">{viewingMeeting.title}</div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Дата и время</label>
+                  <label className="block text-sm font-medium text-gray-700">Дата и время</label>
                   <div className="text-gray-900">
                     {viewingMeeting.datetime ? new Date(viewingMeeting.datetime).toLocaleString('ru-RU') : 'Не указано'}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Статус</label>
-                  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(viewingMeeting.status)}`}>
-                    {getStatusIcon(viewingMeeting.status)}
+                  <label className="block text-sm font-medium text-gray-700">Статус</label>
+                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
                     {viewingMeeting.status || 'scheduled'}
                   </span>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Место проведения</label>
-                  <div className="text-gray-900">{viewingMeeting.location || 'Не указано'}</div>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Место проведения</label>
+                <div className="text-gray-900">{viewingMeeting.location || 'Не указано'}</div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Организация</label>
-                  <div className="text-gray-900">{orgs.find(o => o.id === selectedOrg)?.name || selectedOrg}</div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Организатор</label>
+                <div className="text-gray-900">
+                  {usersList.find(u => u.id === viewingMeeting.owner)?.name || viewingMeeting.owner || 'Не назначен'}
                 </div>
               </div>
 
-              {/* Заметки */}
-              {viewingMeeting.notes && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Заметки</label>
-                  <div className="bg-gray-50 p-4 rounded-lg text-gray-900 whitespace-pre-wrap">
-                    {viewingMeeting.notes}
-                  </div>
-                </div>
-              )}
-
-              {/* Организатор */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Организатор встречи</label>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-linear-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                    {(usersList.find(u => u.id === viewingMeeting.owner)?.name || 'U').charAt(0).toUpperCase()
-                    }
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">
-                      {usersList.find(u => u.id === viewingMeeting.owner)?.name || viewingMeeting.owner || 'Не назначен'}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {usersList.find(u => u.id === viewingMeeting.owner)?.email || ''}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Участники */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700">
                   Участники ({(viewingMeeting.participants || []).length})
                 </label>
                 <div className="space-y-2">
@@ -580,68 +457,46 @@ export default function Meetings() {
                     viewingMeeting.participants.map((pid) => {
                       const user = usersList.find(u => u.id === pid);
                       return (
-                        <div key={pid} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="w-8 h-8 bg-linear-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                            {(user?.name || 'U').charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900">{user?.name || pid}</div>
-                            <div className="text-sm text-gray-500">{user?.email || ''}</div>
-                          </div>
+                        <div key={pid} className="text-gray-900">
+                          {user?.name || pid}
                         </div>
                       );
                     })
                   ) : (
-                    <div className="text-gray-500 italic">Участники не назначены</div>
+                    <div className="text-gray-500">Участники не назначены</div>
                   )}
                 </div>
               </div>
 
-              {/* Метаданные */}
-              <div className="border-t pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-500">
-                  <div>
-                    <span className="font-medium">Создано:</span> {' '}
-                    {viewingMeeting.createdAt ? new Date(viewingMeeting.createdAt).toLocaleString('ru-RU') : 'Неизвестно'}
+              {viewingMeeting.notes && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Заметки</label>
+                  <div className="bg-gray-50 p-3 rounded text-gray-900">
+                    {viewingMeeting.notes}
                   </div>
-                  {viewingMeeting.updatedAt && (
-                    <div>
-                      <span className="font-medium">Обновлено:</span> {' '}
-                      {new Date(viewingMeeting.updatedAt).toLocaleString('ru-RU')}
-                    </div>
-                  )}
                 </div>
-              </div>
+              )}
 
-              {/* Действия */}
-              <div className="border-t pt-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => {
-                        setViewModalOpen(false);
-                        startEdit(viewingMeeting);
-                      }}
-                      className="bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Редактировать
-                    </button>
-                    <button
-                      onClick={() => {
-                        setViewModalOpen(false);
-                        handleDeleteMeeting(viewingMeeting.id);
-                      }}
-                      className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      Удалить
-                    </button>
-                  </div>
+              <div className="flex justify-between pt-4 border-t">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setViewModalOpen(false);
+                      startEdit(viewingMeeting);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                  >
+                    Редактировать
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewModalOpen(false);
+                      handleDeleteMeeting(viewingMeeting.id);
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                  >
+                    Удалить
+                  </button>
                 </div>
               </div>
             </div>
@@ -652,88 +507,74 @@ export default function Meetings() {
       {/* Create/Edit Meeting Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900">
                   {editingMeeting ? 'Редактировать встречу' : 'Создать встречу'}
                 </h2>
                 <button
                   onClick={resetForm}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  ×
                 </button>
               </div>
             </div>
 
-            <form onSubmit={editingMeeting ? handleUpdateMeeting : handleCreateMeeting} className="p-6 space-y-5">
+            <form onSubmit={editingMeeting ? handleUpdateMeeting : handleCreateMeeting} className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Название встречи <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Название встречи *
                 </label>
                 <input
                   type="text"
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Введите название встречи"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Организация
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Дата и время
                 </label>
-                <div className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
-                  {selectedOrg ? (orgs.find(o => o.id === selectedOrg)?.name || selectedOrg) : 'Организация не выбрана'}
-                </div>
-                {editingMeeting && (
-                  <p className="text-xs text-gray-500 mt-1">Организацию нельзя изменить после создания</p>
-                )}
+                <input
+                  type="datetime-local"
+                  name="datetime"
+                  value={formData.datetime}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Дата и время
-                  </label>
-                  <input
-                    type="datetime-local"
-                    name="datetime"
-                    value={formData.datetime}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Место проведения
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Офис, Zoom, адрес..."
+                />
+              </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Место проведения
-                  </label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Офис, Zoom, адрес..."
-                  />
-                </div>
-
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Статус <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Статус *
                   </label>
                   <select
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >
                     <option value="scheduled">Запланирована</option>
@@ -745,17 +586,17 @@ export default function Meetings() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Организатор <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Организатор *
                   </label>
                   <select
                     name="owner"
                     value={formData.owner}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >
-                    <option value="">— Выберите организатора —</option>
+                    <option value="">— Выберите —</option>
                     {usersList.map(u => (
                       <option key={u.id} value={u.id}>
                         {u.name || u.email || u.id}
@@ -766,7 +607,7 @@ export default function Meetings() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Участники
                 </label>
                 <select
@@ -779,7 +620,7 @@ export default function Meetings() {
                       }));
                     }
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">— Добавить участника —</option>
                   {usersList
@@ -792,19 +633,19 @@ export default function Meetings() {
                   }
                 </select>
                 
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {formData.participants.map(pid => {
                     const user = usersList.find(u => u.id === pid);
                     return (
-                      <div key={pid} className="flex items-center bg-green-100 rounded-full px-3 py-1">
-                        <span className="text-sm text-green-800">{user?.name || user?.email || pid}</span>
+                      <div key={pid} className="flex items-center bg-blue-100 rounded px-2 py-1">
+                        <span className="text-sm text-blue-800">{user?.name || user?.email || pid}</span>
                         <button
                           type="button"
                           onClick={() => setFormData(prev => ({
                             ...prev,
                             participants: prev.participants.filter(p => p !== pid)
                           }))}
-                          className="ml-2 text-green-600 hover:text-green-800"
+                          className="ml-2 text-blue-600 hover:text-blue-800"
                         >
                           ×
                         </button>
@@ -815,14 +656,14 @@ export default function Meetings() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Заметки
                 </label>
                 <textarea
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Дополнительная информация о встрече..."
                   rows="3"
                 />
@@ -832,26 +673,16 @@ export default function Meetings() {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors"
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="flex-1 bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg"
                 >
-                  {isCreating ? (
-                    <>
-                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Сохранение...
-                    </>
-                  ) : (
-                    editingMeeting ? 'Обновить' : 'Создать'
-                  )}
+                  {isCreating ? 'Сохранение...' : (editingMeeting ? 'Обновить' : 'Создать')}
                 </button>
               </div>
             </form>
@@ -862,17 +693,15 @@ export default function Meetings() {
       {/* Filter Modal */}
       {filterModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="p-4 border-b">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Фильтры</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Фильтры</h2>
                 <button
                   onClick={() => setFilterModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  ×
                 </button>
               </div>
             </div>
@@ -883,7 +712,7 @@ export default function Meetings() {
                 setFilters(tempFilters);
                 setFilterModalOpen(false);
               }}
-              className="p-6 space-y-4"
+              className="p-4 space-y-4"
             >
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Название встречи</label>
@@ -891,7 +720,7 @@ export default function Meetings() {
                   type="text"
                   value={tempFilters.title}
                   onChange={(e) => setTempFilters(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Поиск по названию..."
                 />
               </div>
@@ -902,7 +731,7 @@ export default function Meetings() {
                   type="text"
                   value={tempFilters.status}
                   onChange={(e) => setTempFilters(prev => ({ ...prev, status: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Поиск по статусу..."
                 />
               </div>
@@ -913,7 +742,7 @@ export default function Meetings() {
                   type="text"
                   value={tempFilters.location}
                   onChange={(e) => setTempFilters(prev => ({ ...prev, location: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Поиск по месту..."
                 />
               </div>
@@ -923,7 +752,7 @@ export default function Meetings() {
                 <select
                   value={tempFilters.owner}
                   onChange={(e) => setTempFilters(prev => ({ ...prev, owner: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">— Любой —</option>
                   {usersList.map(u => (
@@ -936,7 +765,7 @@ export default function Meetings() {
                 <button
                   type="button"
                   onClick={() => setFilterModalOpen(false)}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg font-medium transition-colors"
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
                 >
                   Отмена
                 </button>
@@ -946,13 +775,13 @@ export default function Meetings() {
                     const empty = { title: '', owner: '', status: '', location: '' };
                     setTempFilters(empty);
                   }}
-                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-4 py-3 rounded-lg font-medium transition-colors"
+                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-4 py-2 rounded-lg"
                 >
                   Сбросить
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                 >
                   Применить
                 </button>

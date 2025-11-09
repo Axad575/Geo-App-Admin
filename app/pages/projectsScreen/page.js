@@ -245,17 +245,17 @@ export default function Projects() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex bg-gray-50 min-h-screen">
       <Sidebar />
       <div className="flex-1">
         <Navbar />
-        <div className="p-8">
+        <div className="p-6">
           {/* Header */}
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <div className="mb-6">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Управление проектами</h1>
-                <p className="text-gray-600 mt-2">Создание, редактирование и отслеживание проектов организации</p>
+                <h1 className="text-2xl font-bold text-gray-900">Проекты</h1>
+                <p className="text-gray-600">Управление проектами организации</p>
               </div>
               <button
                 onClick={() => {
@@ -263,27 +263,24 @@ export default function Projects() {
                   resetForm();
                   setIsModalOpen(true);
                 }}
-                className="bg-linear-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-xl font-medium shadow-lg transition-all duration-200 flex items-center gap-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Добавить проект
+                + Добавить проект
               </button>
             </div>
           </div>
 
           {/* Organization Selector & Filters */}
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <div className="bg-white border rounded-lg p-4 mb-6">
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-end">
               <div className="flex-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Организация
                 </label>
                 <select
                   value={selectedOrg}
                   onChange={(e) => setSelectedOrg(e.target.value)}
-                  className="w-full md:w-80 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm appearance-none cursor-not-allowed"
+                  className="w-full md:w-80 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled
                 >
                   <option value="">— Выберите организацию —</option>
@@ -295,22 +292,19 @@ export default function Projects() {
                 </select>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   onClick={() => {
                     setTempFilters(filters);
                     setFilterModalOpen(true);
                   }}
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
-                  </svg>
                   Фильтры
                 </button>
                 <button
                   onClick={() => setFilters({ title: '', status: '', owner: '', priority: '' })}
-                  className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-3 rounded-lg font-medium transition-colors"
+                  className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg"
                 >
                   Сбросить
                 </button>
@@ -319,14 +313,14 @@ export default function Projects() {
           </div>
 
           {/* Projects Table */}
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white border rounded-lg">
+            <div className="px-4 py-3 border-b">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-medium text-gray-900">
                   Проекты ({filteredProjects.length})
                 </h2>
                 {selectedOrg && (
-                  <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
                     {orgs.find(o => o.id === selectedOrg)?.name || selectedOrg}
                   </span>
                 )}
@@ -334,20 +328,11 @@ export default function Projects() {
             </div>
 
             {loading ? (
-              <div className="p-12 text-center">
-                <div className="inline-flex items-center px-4 py-2 font-semibold leading-6 text-sm shadow rounded-md text-purple-500 bg-white transition ease-in-out duration-150 cursor-not-allowed">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Загрузка проектов...
-                </div>
+              <div className="p-8 text-center">
+                <div className="text-gray-500">Загрузка проектов...</div>
               </div>
             ) : filteredProjects.length === 0 ? (
-              <div className="p-12 text-center">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
+              <div className="p-8 text-center">
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Нет проектов</h3>
                 <p className="text-gray-500 mb-4">
                   {selectedOrg ? 'В выбранной организации пока нет проектов' : 'Выберите организацию для просмотра проектов'}
@@ -359,7 +344,7 @@ export default function Projects() {
                       resetForm();
                       setIsModalOpen(true);
                     }}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                   >
                     Создать первый проект
                   </button>
@@ -370,47 +355,49 @@ export default function Projects() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Название</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Статус</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Приоритет</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Владелец</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Участники</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Срок</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Действия</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Название</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Приоритет</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Владелец</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Участники</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Срок</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Действия</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredProjects.map((project) => (
-                      <tr key={project.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
+                      <tr key={project.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3">
                           <div>
                             <div className="text-sm font-medium text-gray-900">{project.title}</div>
-                            <div className="text-sm text-gray-500 truncate max-w-xs">
-                              {project.description || 'Без описания'}
+                            <div className="text-sm text-gray-500">
+                              {project.description?.length > 50 
+                                ? `${project.description.substring(0, 50)}...` 
+                                : project.description || 'Без описания'}
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(project.status)}`}>
                             {project.status || 'Не указан'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(project.priority)}`}>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 text-xs font-medium rounded ${getPriorityColor(project.priority)}`}>
                             {project.priority || 'medium'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-4 py-3 text-sm text-gray-900">
                           {usersList.find(u => u.id === project.owner)?.name || project.owner || '—'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <div className="flex -space-x-2">
+                        <td className="px-4 py-3">
+                          <div className="flex -space-x-1">
                             {(project.participants || []).slice(0, 3).map((pid, index) => {
                               const user = usersList.find(u => u.id === pid);
                               return (
                                 <div
                                   key={pid}
-                                  className="w-8 h-8 bg-linear-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-white"
+                                  className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs border-2 border-white"
                                   title={user?.name || user?.email || pid}
                                 >
                                   {(user?.name || 'U').charAt(0).toUpperCase()}
@@ -418,43 +405,33 @@ export default function Projects() {
                               );
                             })}
                             {project.participants?.length > 3 && (
-                              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-xs font-semibold border-2 border-white">
+                              <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-xs border-2 border-white">
                                 +{project.participants.length - 3}
                               </div>
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-4 py-3 text-sm text-gray-500">
                           {project.endDate ? new Date(project.endDate).toLocaleDateString('ru-RU') : '—'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => viewProject(project)}
-                              className="text-purple-600 hover:text-purple-900 font-medium flex items-center gap-1 px-3 py-1 rounded-md hover:bg-purple-50 transition-colors"
+                              className="text-blue-600 hover:text-blue-900 text-sm"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
                               Просмотр
                             </button>
                             <button
                               onClick={() => startEdit(project)}
-                              className="text-blue-600 hover:text-blue-900 font-medium flex items-center gap-1 px-3 py-1 rounded-md hover:bg-blue-50 transition-colors"
+                              className="text-blue-600 hover:text-blue-900 text-sm"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
                               Изменить
                             </button>
                             <button
                               onClick={() => handleDeleteProject(project.id)}
-                              className="text-red-600 hover:text-red-900 font-medium flex items-center gap-1 px-3 py-1 rounded-md hover:bg-red-50 transition-colors"
+                              className="text-red-600 hover:text-red-900 text-sm"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
                               Удалить
                             </button>
                           </div>
@@ -472,83 +449,76 @@ export default function Projects() {
       {/* View Project Modal */}
       {viewModalOpen && viewingProject && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Просмотр проекта</h2>
-                <div className="flex items-center gap-3">
-                  
-                  <button
-                    onClick={() => setViewModalOpen(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+                <h2 className="text-xl font-semibold text-gray-900">Просмотр проекта</h2>
+                <button
+                  onClick={() => setViewModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
               </div>
             </div>
 
-            <div className="p-6 space-y-6">
-              {/* Основная информация */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Название</label>
-                  <div className="text-lg font-medium text-gray-900">{viewingProject.title}</div>
+                  <label className="block text-sm font-medium text-gray-700">Название</label>
+                  <div className="text-gray-900 font-medium">{viewingProject.title}</div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Организация</label>
+                  <label className="block text-sm font-medium text-gray-700">Организация</label>
                   <div className="text-gray-900">{orgs.find(o => o.id === selectedOrg)?.name || selectedOrg}</div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Статус</label>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(viewingProject.status)}`}>
+                  <label className="block text-sm font-medium text-gray-700">Статус</label>
+                  <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(viewingProject.status)}`}>
                     {viewingProject.status || 'Не указан'}
                   </span>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Приоритет</label>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(viewingProject.priority)}`}>
+                  <label className="block text-sm font-medium text-gray-700">Приоритет</label>
+                  <span className={`px-2 py-1 text-xs font-medium rounded ${getPriorityColor(viewingProject.priority)}`}>
                     {viewingProject.priority || 'medium'}
                   </span>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Дата начала</label>
+                  <label className="block text-sm font-medium text-gray-700">Дата начала</label>
                   <div className="text-gray-900">
                     {viewingProject.startDate ? new Date(viewingProject.startDate).toLocaleDateString('ru-RU') : 'Не указана'}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Дата окончания</label>
+                  <label className="block text-sm font-medium text-gray-700">Дата окончания</label>
                   <div className="text-gray-900">
                     {viewingProject.endDate ? new Date(viewingProject.endDate).toLocaleDateString('ru-RU') : 'Не указана'}
                   </div>
                 </div>
               </div>
 
-              {/* Описание */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Описание</label>
-                <div className="bg-gray-50 p-4 rounded-lg text-gray-900">
+                <label className="block text-sm font-medium text-gray-700">Описание</label>
+                <div className="bg-gray-50 p-3 rounded text-gray-900">
                   {viewingProject.description || 'Описание отсутствует'}
                 </div>
               </div>
 
-              {/* Владелец */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Владелец проекта</label>
+                <label className="block text-sm font-medium text-gray-700">Владелец проекта</label>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-linear-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                    {(usersList.find(u => u.id === viewingProject.owner)?.name || 'U').charAt(0).toUpperCase()}
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">
+                    {(usersList.find(u => u.id === viewingProject.owner)?.name || 'U').charAt(0).toUpperCase()
+                    }
                   </div>
                   <div>
-                    <div className="font-medium text-gray-900">
+                    <div className="text-gray-900">
                       {usersList.find(u => u.id === viewingProject.owner)?.name || viewingProject.owner || 'Не назначен'}
                     </div>
                     <div className="text-sm text-gray-500">
@@ -558,9 +528,8 @@ export default function Projects() {
                 </div>
               </div>
 
-              {/* Участники */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Участники ({(viewingProject.participants || []).length})
                 </label>
                 <div className="space-y-2">
@@ -568,80 +537,51 @@ export default function Projects() {
                     viewingProject.participants.map((pid) => {
                       const user = usersList.find(u => u.id === pid);
                       return (
-                        <div key={pid} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="w-8 h-8 bg-linear-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                        <div key={pid} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
+                          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">
                             {(user?.name || 'U').charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-medium text-gray-900">{user?.name || pid}</div>
+                            <div className="text-gray-900">{user?.name || pid}</div>
                             <div className="text-sm text-gray-500">{user?.email || ''}</div>
                           </div>
                         </div>
                       );
                     })
                   ) : (
-                    <div className="text-gray-500 italic">Участники не назначены</div>
+                    <div className="text-gray-500">Участники не назначены</div>
                   )}
                 </div>
               </div>
 
-              {/* Метаданные */}
-              <div className="border-t pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-500">
-                  <div>
-                    <span className="font-medium">Создан:</span> {' '}
-                    {viewingProject.createdAt ? new Date(viewingProject.createdAt).toLocaleString('ru-RU') : 'Неизвестно'}
-                  </div>
-                  {viewingProject.updatedAt && (
-                    <div>
-                      <span className="font-medium">Обновлен:</span> {' '}
-                      {new Date(viewingProject.updatedAt).toLocaleString('ru-RU')}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Действия */}
-              <div className="border-t pt-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => {
-                        setViewModalOpen(false);
-                        startEdit(viewingProject);
-                      }}
-                      className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Редактировать
-                    </button>
-                    <button
-                      onClick={() => {
-                        setViewModalOpen(false);
-                        handleDeleteProject(viewingProject.id);
-                      }}
-                      className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      Удалить
-                    </button>
-                  </div>
-                  
-                 <button
-                    onClick={() => router.push(`/pages/projects/${viewingProject.id}?orgId=${selectedOrg}`)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+              <div className="flex justify-between pt-4 border-t">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setViewModalOpen(false);
+                      startEdit(viewingProject);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    Перейти к проекту
-                    <span>&gt;&gt;</span>
+                    Редактировать
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewModalOpen(false);
+                      handleDeleteProject(viewingProject.id);
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                  >
+                    Удалить
                   </button>
                 </div>
+                
+                <button
+                  onClick={() => router.push(`/pages/projectsScreen/${viewingProject.id}?orgId=${selectedOrg}`)}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                >
+                  Перейти к проекту →
+                </button>
               </div>
             </div>
           </div>
@@ -651,68 +591,54 @@ export default function Projects() {
       {/* Create/Edit Project Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900">
                   {editingProject ? 'Редактировать проект' : 'Создать проект'}
                 </h2>
                 <button
                   onClick={resetForm}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  ×
                 </button>
               </div>
             </div>
 
-            <form onSubmit={editingProject ? handleUpdateProject : handleCreateProject} className="p-6 space-y-5">
+            <form onSubmit={editingProject ? handleUpdateProject : handleCreateProject} className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Название <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Название *
                 </label>
                 <input
                   type="text"
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Введите название проекта"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Организация
-                </label>
-                <div className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
-                  {selectedOrg ? (orgs.find(o => o.id === selectedOrg)?.name || selectedOrg) : 'Организация не выбрана'}
-                </div>
-                {editingProject && (
-                  <p className="text-xs text-gray-500 mt-1">Организацию нельзя изменить после создания</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Описание
                 </label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Опишите цели и задачи проекта"
                   rows="3"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Дата начала
                   </label>
                   <input
@@ -720,12 +646,12 @@ export default function Projects() {
                     name="startDate"
                     value={formData.startDate}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Дата окончания
                   </label>
                   <input
@@ -733,21 +659,21 @@ export default function Projects() {
                     name="endDate"
                     value={formData.endDate}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Статус <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Статус *
                   </label>
                   <select
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >
                     <option value="">Выберите статус</option>
@@ -760,14 +686,14 @@ export default function Projects() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Приоритет <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Приоритет *
                   </label>
                   <select
                     name="priority"
                     value={formData.priority}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >
                     <option value="low">Низкий</option>
@@ -779,14 +705,14 @@ export default function Projects() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Владелец проекта <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Владелец проекта *
                 </label>
                 <select
                   name="owner"
                   value={formData.owner}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 >
                   <option value="">— Выберите владельца —</option>
@@ -799,7 +725,7 @@ export default function Projects() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Участники
                 </label>
                 <select
@@ -812,7 +738,7 @@ export default function Projects() {
                       }));
                     }
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">— Добавить участника —</option>
                   {usersList
@@ -825,19 +751,19 @@ export default function Projects() {
                   }
                 </select>
                 
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {formData.participants.map(pid => {
                     const user = usersList.find(u => u.id === pid);
                     return (
-                      <div key={pid} className="flex items-center bg-purple-100 rounded-full px-3 py-1">
-                        <span className="text-sm text-purple-800">{user?.name || user?.email || pid}</span>
+                      <div key={pid} className="flex items-center bg-blue-100 rounded px-2 py-1">
+                        <span className="text-sm text-blue-800">{user?.name || user?.email || pid}</span>
                         <button
                           type="button"
                           onClick={() => setFormData(prev => ({
                             ...prev,
                             participants: prev.participants.filter(p => p !== pid)
                           }))}
-                          className="ml-2 text-purple-600 hover:text-purple-800"
+                          className="ml-2 text-blue-600 hover:text-blue-800"
                         >
                           ×
                         </button>
@@ -851,26 +777,16 @@ export default function Projects() {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors"
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="flex-1 bg-linear-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg"
                 >
-                  {isCreating ? (
-                    <>
-                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Сохранение...
-                    </>
-                  ) : (
-                    editingProject ? 'Обновить' : 'Создать'
-                  )}
+                  {isCreating ? 'Сохранение...' : (editingProject ? 'Обновить' : 'Создать')}
                 </button>
               </div>
             </form>
@@ -881,17 +797,15 @@ export default function Projects() {
       {/* Filter Modal */}
       {filterModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="p-4 border-b">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Фильтры</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Фильтры</h2>
                 <button
                   onClick={() => setFilterModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  ×
                 </button>
               </div>
             </div>
@@ -902,7 +816,7 @@ export default function Projects() {
                 setFilters(tempFilters);
                 setFilterModalOpen(false);
               }}
-              className="p-6 space-y-4"
+              className="p-4 space-y-4"
             >
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Название</label>
@@ -910,7 +824,7 @@ export default function Projects() {
                   type="text"
                   value={tempFilters.title}
                   onChange={(e) => setTempFilters(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Поиск по названию..."
                 />
               </div>
@@ -921,7 +835,7 @@ export default function Projects() {
                   type="text"
                   value={tempFilters.status}
                   onChange={(e) => setTempFilters(prev => ({ ...prev, status: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Поиск по статусу..."
                 />
               </div>
@@ -932,7 +846,7 @@ export default function Projects() {
                   type="text"
                   value={tempFilters.priority}
                   onChange={(e) => setTempFilters(prev => ({ ...prev, priority: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Поиск по приоритету..."
                 />
               </div>
@@ -942,7 +856,7 @@ export default function Projects() {
                 <select
                   value={tempFilters.owner}
                   onChange={(e) => setTempFilters(prev => ({ ...prev, owner: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">— Любой —</option>
                   {usersList.map(u => (
@@ -955,7 +869,7 @@ export default function Projects() {
                 <button
                   type="button"
                   onClick={() => setFilterModalOpen(false)}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg font-medium transition-colors"
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
                 >
                   Отмена
                 </button>
@@ -965,13 +879,13 @@ export default function Projects() {
                     const empty = { title: '', status: '', owner: '', priority: '' };
                     setTempFilters(empty);
                   }}
-                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-4 py-3 rounded-lg font-medium transition-colors"
+                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-4 py-2 rounded-lg"
                 >
                   Сбросить
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                 >
                   Применить
                 </button>

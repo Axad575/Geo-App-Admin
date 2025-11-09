@@ -219,13 +219,13 @@ export default function Users() {
             <Sidebar />
             <div className="flex-1">
                 <Navbar />
-                <div className="p-8">
+                <div className="p-6">
                     {/* Header */}
-                    <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+                    <div className="mb-6">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h1 className="text-3xl font-bold text-gray-900">Управление пользователями</h1>
-                                <p className="text-gray-600 mt-2">Создание, редактирование и удаление пользователей организации</p>
+                                <h1 className="text-2xl font-bold text-gray-900">Управление пользователями</h1>
+                                <p className="text-gray-600">Создание, редактирование и удаление пользователей организации</p>
                             </div>
                             <button
                                 onClick={() => {
@@ -233,27 +233,24 @@ export default function Users() {
                                     setFormData({ name: '', email: '', password: '', role: '', phone: '', organization: selectedOrg });
                                     setIsModalOpen(true);
                                 }}
-                                className="bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl font-medium shadow-lg transition-all duration-200 flex items-center gap-2"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                Добавить пользователя
+                                + Добавить пользователя
                             </button>
                         </div>
                     </div>
 
                     {/* Organization Selector & Filters */}
-                    <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+                    <div className="bg-white border rounded-lg p-4 mb-6">
                         <div className="flex flex-col md:flex-row gap-4 items-start md:items-end">
-                            <div className="flex-1 align-middle">
-                                <label className="block text-sm font-semibold  text-gray-700 mb-2">
+                            <div className="flex-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Организация
                                 </label>
                                 <select
                                     value={selectedOrg}
                                     onChange={(e) => setSelectedOrg(e.target.value)}
-                                    className="w-full md:w-80 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm appearance-none cursor-not-allowed"
+                                    className="w-full md:w-80 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     disabled
                                 >
                                     <option value="">— Выберите организацию —</option>
@@ -265,22 +262,19 @@ export default function Users() {
                                 </select>
                             </div>
 
-                            <div className="flex gap-3">
+                            <div className="flex gap-2">
                                 <button
                                     onClick={() => {
                                         setTempFilters(filters);
                                         setFilterModalOpen(true);
                                     }}
-                                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
-                                    </svg>
                                     Фильтры
                                 </button>
                                 <button
                                     onClick={() => setFilters({ name: '', email: '', role: '', phone: '' })}
-                                    className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-3 rounded-lg font-medium transition-colors"
+                                    className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg"
                                 >
                                     Сбросить
                                 </button>
@@ -289,14 +283,14 @@ export default function Users() {
                     </div>
 
                     {/* Users Table */}
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-200">
+                    <div className="bg-white border rounded-lg">
+                        <div className="px-4 py-3 border-b">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-semibold text-gray-900">
+                                <h2 className="text-lg font-medium text-gray-900">
                                     Пользователи ({filteredUsers.length})
                                 </h2>
                                 {selectedOrg && (
-                                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
                                         {orgs.find(o => o.id === selectedOrg)?.name || selectedOrg}
                                     </span>
                                 )}
@@ -304,20 +298,11 @@ export default function Users() {
                         </div>
 
                         {loading ? (
-                            <div className="p-12 text-center">
-                                <div className="inline-flex items-center px-4 py-2 font-semibold leading-6 text-sm shadow rounded-md text-blue-500 bg-white transition ease-in-out duration-150 cursor-not-allowed">
-                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Загрузка пользователей...
-                                </div>
+                            <div className="p-8 text-center">
+                                <div className="text-gray-500">Загрузка пользователей...</div>
                             </div>
                         ) : filteredUsers.length === 0 ? (
-                            <div className="p-12 text-center">
-                                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                                </svg>
+                            <div className="p-8 text-center">
                                 <h3 className="text-lg font-medium text-gray-900 mb-2">Нет пользователей</h3>
                                 <p className="text-gray-500 mb-4">
                                     {selectedOrg ? 'В выбранной организации пока нет пользователей' : 'Выберите организацию для просмотра пользователей'}
@@ -329,7 +314,7 @@ export default function Users() {
                                             setFormData({ name: '', email: '', password: '', role: '', phone: '', organization: selectedOrg });
                                             setIsModalOpen(true);
                                         }}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
+                                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                                     >
                                         Добавить первого пользователя
                                     </button>
@@ -340,20 +325,20 @@ export default function Users() {
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                         <tr>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Имя</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Роль</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Телефон</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Дата</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Действия</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Имя</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Роль</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Телефон</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Действия</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {filteredUsers.map((user) => (
-                                            <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                            <tr key={user.id} className="hover:bg-gray-50">
+                                                <td className="px-4 py-3">
                                                     <div className="flex items-center">
-                                                        <div className="w-10 h-10 bg-linear-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                                                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">
                                                             {(user.name || 'U').charAt(0).toUpperCase()}
                                                         </div>
                                                         <div className="ml-3">
@@ -361,9 +346,9 @@ export default function Users() {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.email}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                                <td className="px-4 py-3 text-sm text-gray-900">{user.email}</td>
+                                                <td className="px-4 py-3">
+                                                    <span className={`px-2 py-1 text-xs font-medium rounded ${
                                                         user.role === 'admin' 
                                                             ? 'bg-red-100 text-red-800' 
                                                             : user.role === 'manager'
@@ -373,28 +358,22 @@ export default function Users() {
                                                         {user.role || 'user'}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.phone || '—'}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <td className="px-4 py-3 text-sm text-gray-900">{user.phone || '—'}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-500">
                                                     {user.joinedAt ? new Date(user.joinedAt).toLocaleDateString('ru-RU') : '—'}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                <td className="px-4 py-3">
                                                     <div className="flex items-center gap-2">
                                                         <button
                                                             onClick={() => startEdit(user)}
-                                                            className="text-blue-600 hover:text-blue-900 font-medium flex items-center gap-1 px-3 py-1 rounded-md hover:bg-blue-50 transition-colors"
+                                                            className="text-blue-600 hover:text-blue-900 text-sm"
                                                         >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                            </svg>
                                                             Редактировать
                                                         </button>
                                                         <button
                                                             onClick={() => handleDeleteUser(user.id)}
-                                                            className="text-red-600 hover:text-red-900 font-medium flex items-center gap-1 px-3 py-1 rounded-md hover:bg-red-50 transition-colors"
+                                                            className="text-red-600 hover:text-red-900 text-sm"
                                                         >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                            </svg>
                                                             Удалить
                                                         </button>
                                                     </div>
@@ -412,49 +391,47 @@ export default function Users() {
             {/* Modal for Create/Edit User */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
-                        <div className="p-6 border-b border-gray-200">
+                    <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+                        <div className="p-4 border-b">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-2xl font-bold text-gray-900">
+                                <h2 className="text-xl font-semibold text-gray-900">
                                     {editingUser ? 'Редактировать пользователя' : 'Создать пользователя'}
                                 </h2>
                                 <button
                                     onClick={resetForm}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    className="text-gray-400 hover:text-gray-600"
                                 >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                    ×
                                 </button>
                             </div>
                         </div>
 
-                        <form onSubmit={editingUser ? handleUpdateUser : handleCreateUser} className="p-6 space-y-5">
+                        <form onSubmit={editingUser ? handleUpdateUser : handleCreateUser} className="p-4 space-y-4">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Имя <span className="text-red-500">*</span>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Имя *
                                 </label>
                                 <input
                                     type="text"
                                     name="name"
                                     value={formData.name}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="Введите имя пользователя"
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Email <span className="text-red-500">*</span>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Email *
                                 </label>
                                 <input
                                     type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="user@example.com"
                                     required
                                     disabled={!!editingUser}
@@ -466,15 +443,15 @@ export default function Users() {
 
                             {!editingUser && (
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Пароль <span className="text-red-500">*</span>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Пароль *
                                     </label>
                                     <input
                                         type="password"
                                         name="password"
                                         value={formData.password}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="Минимум 6 символов"
                                         required={!editingUser}
                                         minLength="6"
@@ -483,14 +460,14 @@ export default function Users() {
                             )}
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Роль <span className="text-red-500">*</span>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Роль *
                                 </label>
                                 <select
                                     name="role"
                                     value={formData.role}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
                                 >
                                     <option value="">Выберите роль</option>
@@ -501,17 +478,17 @@ export default function Users() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Организация <span className="text-red-500">*</span>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Организация *
                                 </label>
                                 <select
                                     name="organization"
                                     value={formData.organization || selectedOrg}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                                     required
                                     disabled     
-                                                               >
+                                >
                                     <option value="">— Выберите организацию —</option>
                                     {orgs.map(o => (
                                         <option key={o.id} value={o.id}>{o.name || o.id}</option>
@@ -523,7 +500,7 @@ export default function Users() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Телефон
                                 </label>
                                 <input
@@ -531,7 +508,7 @@ export default function Users() {
                                     name="phone"
                                     value={formData.phone}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="+998 12 345 67 89"
                                 />
                             </div>
@@ -540,26 +517,16 @@ export default function Users() {
                                 <button
                                     type="button"
                                     onClick={resetForm}
-                                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors"
+                                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
                                 >
                                     Отмена
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={isCreating}
-                                    className="flex-1 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg"
                                 >
-                                    {isCreating ? (
-                                        <>
-                                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            Сохранение...
-                                        </>
-                                    ) : (
-                                        editingUser ? 'Обновить' : 'Создать'
-                                    )}
+                                    {isCreating ? 'Сохранение...' : (editingUser ? 'Обновить' : 'Создать')}
                                 </button>
                             </div>
                         </form>
@@ -570,17 +537,15 @@ export default function Users() {
             {/* Filter Modal */}
             {filterModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-                        <div className="p-6 border-b border-gray-200">
+                    <div className="bg-white rounded-lg w-full max-w-md">
+                        <div className="p-4 border-b">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-xl font-bold text-gray-900">Фильтры</h2>
+                                <h2 className="text-lg font-semibold text-gray-900">Фильтры</h2>
                                 <button
                                     onClick={() => setFilterModalOpen(false)}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    className="text-gray-400 hover:text-gray-600"
                                 >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                    ×
                                 </button>
                             </div>
                         </div>
@@ -591,7 +556,7 @@ export default function Users() {
                                 setFilters(tempFilters);
                                 setFilterModalOpen(false);
                             }}
-                            className="p-6 space-y-4"
+                            className="p-4 space-y-4"
                         >
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Имя</label>
@@ -599,7 +564,7 @@ export default function Users() {
                                     type="text"
                                     value={tempFilters.name}
                                     onChange={(e) => setTempFilters(prev => ({ ...prev, name: e.target.value }))}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="Поиск по имени..."
                                 />
                             </div>
@@ -609,7 +574,7 @@ export default function Users() {
                                     type="text"
                                     value={tempFilters.email}
                                     onChange={(e) => setTempFilters(prev => ({ ...prev, email: e.target.value }))}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="Поиск по email..."
                                 />
                             </div>
@@ -619,7 +584,7 @@ export default function Users() {
                                     type="text"
                                     value={tempFilters.role}
                                     onChange={(e) => setTempFilters(prev => ({ ...prev, role: e.target.value }))}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="Поиск по роли..."
                                 />
                             </div>
@@ -629,7 +594,7 @@ export default function Users() {
                                     type="text"
                                     value={tempFilters.phone}
                                     onChange={(e) => setTempFilters(prev => ({ ...prev, phone: e.target.value }))}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="Поиск по телефону..."
                                 />
                             </div>
@@ -638,7 +603,7 @@ export default function Users() {
                                 <button
                                     type="button"
                                     onClick={() => setFilterModalOpen(false)}
-                                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg font-medium transition-colors"
+                                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
                                 >
                                     Отмена
                                 </button>
@@ -648,13 +613,13 @@ export default function Users() {
                                         const empty = { name: '', email: '', role: '', phone: '' };
                                         setTempFilters(empty);
                                     }}
-                                    className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-4 py-3 rounded-lg font-medium transition-colors"
+                                    className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-4 py-2 rounded-lg"
                                 >
                                     Сбросить
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                                 >
                                     Применить
                                 </button>
