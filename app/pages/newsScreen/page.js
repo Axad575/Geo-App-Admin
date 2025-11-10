@@ -34,6 +34,14 @@ export default function News() {
   const [filters, setFilters] = useState({ title: '', category: '', priority: '', author: '' });
   const [tempFilters, setTempFilters] = useState({ title: '', category: '', priority: '', author: '' });
 
+  // Добавить новые состояния
+  const [newsStats, setNewsStats] = useState({
+    total: 0,
+    published: 0,
+    drafts: 0,
+    archived: 0
+  });
+
   // Проверка авторизации
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -53,8 +61,10 @@ export default function News() {
       setLoading(true);
       if (!orgId) {
         setNews([]);
+        setNewsStats({ total: 0, published: 0, drafts: 0, archived: 0 });
         return;
       }
+      
       const q = query(
         collection(db, `organizations/${orgId}/news`),
         orderBy('createdAt', 'desc')
@@ -62,7 +72,17 @@ export default function News() {
       const querySnapshot = await getDocs(q);
       const list = [];
       querySnapshot.forEach(d => list.push({ id: d.id, ...d.data() }));
+      
+      // Подсчет статистики
+      const stats = {
+        total: list.length,
+        published: list.filter(n => n.published && !n.archived).length,
+        drafts: list.filter(n => !n.published && !n.archived).length,
+        archived: list.filter(n => n.archived).length
+      };
+      
       setNews(list);
+      setNewsStats(stats);
     } catch (error) {
       console.error('Error fetching news:', error);
     } finally {
@@ -240,6 +260,62 @@ export default function News() {
     }
   };
 
+  // Добавить функции для управления статусом
+  const handlePublishNews = async (newsId) => {
+    if (!confirm('Вы уверены, что хотите опубликовать эту новость?')) return;
+    
+    try {
+      await updateDoc(doc(db, `organizations/${selectedOrg}/news`, newsId), {
+        published: true,
+        publishedAt: new Date().toISOString(),
+        publishedBy: currentUser?.uid
+      });
+      fetchNews(selectedOrg);
+      alert('Новость опубликована!');
+    } catch (error) {
+      console.error('Error publishing news:', error);
+      alert(`Ошибка публикации: ${error.message}`);
+    }
+  };
+
+  const handleArchiveNews = async (newsId) => {
+    if (!confirm('Вы уверены, что хотите архивировать эту новость?')) return;
+    
+    try {
+      await updateDoc(doc(db, `organizations/${selectedOrg}/news`, newsId), {
+        archived: true,
+        archivedAt: new Date().toISOString(),
+        archivedBy: currentUser?.uid
+      });
+      fetchNews(selectedOrg);
+      alert('Новость архивирована!');
+    } catch (error) {
+      console.error('Error archiving news:', error);
+      alert(`Ошибка архивирования: ${error.message}`);
+    }
+  };
+
+  const handleMarkAsRead = async (newsId) => {
+    try {
+      const newsRef = doc(db, `organizations/${selectedOrg}/news`, newsId);
+      const newsDoc = await getDocs(newsRef);
+      const newsData = newsDoc.data();
+      
+      const readBy = newsData.readBy || [];
+      if (!readBy.includes(currentUser?.uid)) {
+        readBy.push(currentUser.uid);
+        
+        await updateDoc(newsRef, {
+          readBy: readBy,
+          views: (newsData.views || 0) + 1
+        });
+        fetchNews(selectedOrg);
+      }
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
+  };
+
   return (
     <div className="flex bg-gray-50 min-h-screen">
       <Sidebar />
@@ -266,6 +342,26 @@ export default function News() {
             </div>
           </div>
 
+          {/* Добавить статистику новостей */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-lg border p-4">
+              <div className="text-2xl font-bold text-gray-900">{newsStats.total}</div>
+              <div className="text-sm text-gray-600">Всего новостей</div>
+            </div>
+            <div className="bg-white rounded-lg border p-4">
+              <div className="text-2xl font-bold text-green-600">{newsStats.published}</div>
+              <div className="text-sm text-gray-600">Опубликованных</div>
+            </div>
+            <div className="bg-white rounded-lg border p-4">
+              <div className="text-2xl font-bold text-yellow-600">{newsStats.drafts}</div>
+              <div className="text-sm text-gray-600">Черновиков</div>
+            </div>
+            <div className="bg-white rounded-lg border p-4">
+              <div className="text-2xl font-bold text-gray-600">{newsStats.archived}</div>
+              <div className="text-sm text-gray-600">Архивированных</div>
+            </div>
+          </div>
+
           {/* Organization Selector & Filters */}
           <div className="bg-white border rounded-lg p-4 mb-6">
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-end">
@@ -277,7 +373,6 @@ export default function News() {
                   value={selectedOrg}
                   onChange={(e) => setSelectedOrg(e.target.value)}
                   className="w-full md:w-80 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled
                 >
                   <option value="">— Выберите организацию —</option>
                   {orgs.map(o => (
@@ -359,9 +454,19 @@ export default function News() {
                           <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(newsItem.priority)}`}>
                             {newsItem.priority || 'medium'}
                           </span>
-                          {!newsItem.published && (
+                          
+                          {/* Обновленные статусы */}
+                          {newsItem.archived ? (
                             <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-medium">
+                              Архивировано
+                            </span>
+                          ) : !newsItem.published ? (
+                            <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">
                               Черновик
+                            </span>
+                          ) : (
+                            <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
+                              Опубликовано
                             </span>
                           )}
                         </div>
@@ -384,6 +489,9 @@ export default function News() {
                           {newsItem.views > 0 && (
                             <span>{newsItem.views} просмотров</span>
                           )}
+                          {newsItem.readBy && (
+                            <span>Прочитали: {newsItem.readBy.length} чел.</span>
+                          )}
                         </div>
                       </div>
 
@@ -400,6 +508,26 @@ export default function News() {
                         >
                           Изменить
                         </button>
+                        
+                        {/* Добавить новые действия */}
+                        {!newsItem.published && !newsItem.archived && (
+                          <button
+                            onClick={() => handlePublishNews(newsItem.id)}
+                            className="text-green-600 hover:text-green-900 text-sm"
+                          >
+                            Опубликовать
+                          </button>
+                        )}
+                        
+                        {newsItem.published && !newsItem.archived && (
+                          <button
+                            onClick={() => handleArchiveNews(newsItem.id)}
+                            className="text-gray-600 hover:text-gray-900 text-sm"
+                          >
+                            Архивировать
+                          </button>
+                        )}
+                        
                         <button
                           onClick={() => handleDeleteNews(newsItem.id)}
                           className="text-red-600 hover:text-red-900 text-sm"
