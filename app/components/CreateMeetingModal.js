@@ -4,6 +4,7 @@ import { addDoc, collection, getDocs, getDoc, doc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { app, db } from '@/app/api/firebase';
 import { useStrings } from "@/app/hooks/useStrings";
+import ParticipantSelector from './participantSelector';
 
 const CreateMeetingModal = ({ isOpen, onClose, onSuccess, orgId, projectId = null }) => {
     const auth = getAuth(app);
@@ -13,12 +14,14 @@ const CreateMeetingModal = ({ isOpen, onClose, onSuccess, orgId, projectId = nul
     const [orgName, setOrgName] = useState('');
     const [formData, setFormData] = useState({
         title: '',
-        datetime: '',
+        date: '',
         location: '',
-        owner: '',
+        createdBy: '',
         projectId: projectId || '',
         participants: [],
-        notes: ''
+        description: '',
+        status: 'scheduled',
+        type: 'regular'
     });
 
     const fetchUsers = async () => {
@@ -69,7 +72,7 @@ const CreateMeetingModal = ({ isOpen, onClose, onSuccess, orgId, projectId = nul
             if (currentUser) {
                 setFormData(prev => ({
                     ...prev,
-                    owner: currentUser.uid,
+                    createdBy: currentUser.uid,
                     projectId: projectId || ''
                 }));
             }
@@ -90,13 +93,10 @@ const CreateMeetingModal = ({ isOpen, onClose, onSuccess, orgId, projectId = nul
         };
     }, [isOpen]);
 
-    const handleParticipantChange = (userId) => {
-        const isSelected = formData.participants.includes(userId);
+    const handleParticipantsChange = (participants) => {
         setFormData(prev => ({
             ...prev,
-            participants: isSelected 
-                ? prev.participants.filter(id => id !== userId)
-                : [...prev.participants, userId]
+            participants
         }));
     };
 
@@ -106,12 +106,12 @@ const CreateMeetingModal = ({ isOpen, onClose, onSuccess, orgId, projectId = nul
             // Структура данных согласно новой схеме БД
             const meetingData = {
                 title: formData.title,
-                datetime: new Date(formData.datetime).toISOString(),
+                datetime: new Date(formData.date).toISOString(),
                 location: formData.location || '',
-                owner: formData.owner,
+                owner: formData.createdBy,
                 projectId: formData.projectId || null,
                 participants: formData.participants,
-                notes: formData.notes || '',
+                notes: formData.description || '',
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
@@ -126,12 +126,12 @@ const CreateMeetingModal = ({ isOpen, onClose, onSuccess, orgId, projectId = nul
             // Сброс формы
             setFormData({
                 title: '',
-                datetime: '',
+                date: '',
                 location: '',
-                owner: auth.currentUser?.uid || '',
+                createdBy: auth.currentUser?.uid || '',
                 projectId: projectId || '',
                 participants: [],
-                notes: ''
+                description: ''
             });
         } catch (error) {
             console.error('Error creating meeting:', error);
@@ -152,7 +152,7 @@ const CreateMeetingModal = ({ isOpen, onClose, onSuccess, orgId, projectId = nul
             }}
         >
             <div 
-                className="bg-white  rounded-lg p-6 w-full max-w-md max-h-full overflow-y-auto my-auto mx-auto shadow-xl"
+                className="bg-white rounded-lg p-6 w-full max-w-md max-h-full overflow-y-auto my-auto mx-auto shadow-xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center mb-4">
@@ -202,8 +202,8 @@ const CreateMeetingModal = ({ isOpen, onClose, onSuccess, orgId, projectId = nul
                         <input
                             type="datetime-local"
                             required
-                            value={formData.datetime}
-                            onChange={(e) => setFormData(prev => ({ ...prev, datetime: e.target.value }))}
+                            value={formData.date}
+                            onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         />
                     </div>
@@ -239,40 +239,26 @@ const CreateMeetingModal = ({ isOpen, onClose, onSuccess, orgId, projectId = nul
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            {t('meetings.participants')}
-                        </label>
-                        <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-3 bg-gray-50">
-                            {users.length === 0 ? (
-                                <p className="text-sm text-gray-500 p-2">{t('projects.noUsersAvailable')}</p>
-                            ) : (
-                                users.map(user => (
-                                    <div key={user.id} className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            id={`user-${user.id}`}
-                                            checked={formData.participants.includes(user.id)}
-                                            onChange={() => handleParticipantChange(user.id)}
-                                            className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                                        />
-                                        <label htmlFor={`user-${user.id}`} className="ml-2 text-sm text-gray-700">
-                                            {user.name || user.email}
-                                            {user.role && <span className="text-xs text-gray-500 ml-1">({user.role})</span>}
-                                        </label>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
+                    {/* Заменяем старый выбор участников на новый компонент */}
+                    <ParticipantSelector
+                        users={users}
+                        selectedParticipants={formData.participants}
+                        onParticipantsChange={handleParticipantsChange}
+                        excludeUserIds={formData.createdBy ? [formData.createdBy] : []}
+                        label={t('meetings.participants')}
+                        placeholder="Поиск участников по имени, email или роли..."
+                        maxHeight="200px"
+                        showSelectedCount={true}
+                        className="mb-4"
+                    />
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             {t('meetings.notes')}
                         </label>
                         <textarea
-                            value={formData.notes}
-                            onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                            value={formData.description}
+                            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                             rows={3}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                             placeholder={t('meetings.addMeetingNotes')}

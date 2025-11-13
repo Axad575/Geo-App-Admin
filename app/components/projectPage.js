@@ -40,6 +40,33 @@ const ProjectPage = ({ projectId, orgId }) => {
     const [attachedFiles, setAttachedFiles] = useState([]);
     const [uploadingFiles, setUploadingFiles] = useState(false);
 
+    // Функция для добавления записи в историю действий
+    const addToHistory = async (action, details) => {
+        try {
+            const historyEntry = {
+                id: Date.now().toString(),
+                action: action,
+                details: details,
+                author: auth.currentUser?.uid,
+                authorName: users[auth.currentUser?.uid] || auth.currentUser?.email,
+                timestamp: new Date().toISOString()
+            };
+
+            const projectRef = doc(db, `organizations/${orgId}/projects/${projectId}`);
+            await updateDoc(projectRef, {
+                history: arrayUnion(historyEntry)
+            });
+
+            // Обновляем локальное состояние
+            setProject(prev => ({
+                ...prev,
+                history: [...(prev.history || []), historyEntry]
+            }));
+        } catch (error) {
+            console.error('Error adding to history:', error);
+        }
+    };
+
     // Получение данных проекта
     const fetchProject = async () => {
         try {
@@ -181,6 +208,15 @@ const handleAddNote = async () => {
             notes: arrayUnion(noteData)
         });
 
+        // Добавляем в историю
+        await addToHistory('note_added', {
+            noteTitle: newNote.title,
+            hasLocation: !!selectedLocation,
+            locationName: selectedLocation?.name,
+            hasAttachments: attachedFiles.length > 0,
+            attachmentCount: attachedFiles.length
+        });
+
         // Обновляем локальное состояние
         setProject(prev => ({
             ...prev,
@@ -211,6 +247,12 @@ const handleAddNote = async () => {
             const projectRef = doc(db, `organizations/${orgId}/projects/${projectId}`);
             await updateDoc(projectRef, {
                 locations: arrayUnion(locationPoint)
+            });
+
+            // Добавляем в историю
+            await addToHistory('location_added', {
+                locationName: locationData.name,
+                coordinates: `${locationData.latitude}, ${locationData.longitude}`
             });
 
             // Обновляем локальное состояние
@@ -478,6 +520,48 @@ const handleAddNote = async () => {
         }
     };
 
+    const formatTime = (date) => {
+        if (!date) return '';
+        try {
+            return new Date(date).toLocaleTimeString(getLocale(), {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            return date;
+        }
+    };
+
+    // Функция для получения иконки действия
+    const getActionIcon = (action) => {
+        switch (action) {
+            case 'note_added': return '📝';
+            case 'location_added': return '📍';
+            case 'project_created': return '🚀';
+            case 'status_changed': return '🔄';
+            case 'file_uploaded': return '📎';
+            default: return '📋';
+        }
+    };
+
+    // Функция для получения описания действия
+    const getActionDescription = (historyItem) => {
+        switch (historyItem.action) {
+            case 'note_added':
+                return `Добавил заметку "${historyItem.details.noteTitle}"`;
+            case 'location_added':
+                return `Добавил точку "${historyItem.details.locationName}"`;
+            case 'project_created':
+                return 'Создал проект';
+            case 'status_changed':
+                return `Изменил статус на "${historyItem.details.newStatus}"`;
+            case 'file_uploaded':
+                return `Загрузил файл "${historyItem.details.fileName}"`;
+            default:
+                return historyItem.action;
+        }
+    };
+
     if (loading || !project) {
         return (
             <div className="flex items-center justify-center h-screen">
@@ -492,6 +576,15 @@ const handleAddNote = async () => {
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-3xl font-bold">{project.title || t('projects.projectTitle')}</h1>
                 <div className="flex gap-3">
+                    {/* НОВАЯ КНОПКА: Задачи */}
+                    <button 
+                        onClick={() => router.push(`/pages/projects/${projectId}/tasks`)}
+                        className="p-2 bg-blue-600 text-white rounded-lg shadow hover:shadow-md hover:bg-blue-700 transition-colors"
+                        title="Управление задачами"
+                    >
+                        Задачи
+                    </button>
+                    
                     {/* Export to PDF button */}
                     <button 
                         onClick={exportToPDF}
@@ -681,6 +774,7 @@ const handleAddNote = async () => {
                                                         >
                                                             ✕
                                                         </button>
+                                                        
                                                     </div>
                                                 ))}
                                             </div>
@@ -757,15 +851,7 @@ const handleAddNote = async () => {
                                                 </div>
                                             </div>
 
-                                            {/* Здесь уже есть отображение заголовка и описания заметки */}
-                                            <h4 className="font-medium text-gray-900">
-                                                {note.title}
-                                            </h4>
-                                            <p className="text-sm text-gray-600 mt-1">
-                                                {note.description}
-                                            </p>
-                                            
-                                            {/* ДОБАВЬТЕ ЭТОТ КОД СЮДА - для отображения файлов */}
+                                            {/* Отображение прикрепленных файлов */}
                                             {note.attachments && note.attachments.length > 0 && (
                                                 <div className="mt-2">
                                                     <h5 className="text-sm font-medium text-gray-700 mb-2">
@@ -798,8 +884,6 @@ const handleAddNote = async () => {
                                                     </div>
                                                 </div>
                                             )}
-                                            
-                                            {/* Остальная информация о заметке (автор, дата и т.д.) */}
                                         </div>
                                     ))}
                                 </div>
@@ -889,6 +973,56 @@ const handleAddNote = async () => {
                             <p className="text-sm text-gray-700">
                                 {project.status || t('projects.notStarted')}
                             </p>
+                        </div>
+                    </div>
+
+                    {/* НОВЫЙ БЛОК: История действий */}
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h3 className="text-lg font-semibold mb-3">История действий</h3>
+                        <div className="bg-gray-100 p-4 rounded-lg max-h-[400px] overflow-y-auto">
+                            {project.history && project.history.length > 0 ? (
+                                <div className="space-y-3">
+                                    {project.history
+                                        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                                        .map((item, index) => (
+                                            <div key={index} className="bg-white p-3 rounded-lg shadow-sm border-l-4 border-blue-500">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="text-lg">
+                                                        {getActionIcon(item.action)}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <p className="text-sm text-gray-800 font-medium">
+                                                            {getActionDescription(item)}
+                                                        </p>
+                                                        <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                                            <span>{item.authorName}</span>
+                                                            <span>•</span>
+                                                            <span>{formatDate(item.timestamp)}</span>
+                                                            <span>{formatTime(item.timestamp)}</span>
+                                                        </div>
+                                                        
+                                                        {/* Дополнительные детали для определенных действий */}
+                                                        {item.details && (
+                                                            <div className="mt-1 text-xs text-gray-600">
+                                                                {item.action === 'location_added' && (
+                                                                    <span>📍 {item.details.coordinates}</span>
+                                                                )}
+                                                                {item.action === 'note_added' && item.details.hasAttachments && (
+                                                                    <span>📎 {item.details.attachmentCount} файла(ов)</span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            ) : (
+                                <div className="text-center text-gray-600 text-sm">
+                                    История действий пока пуста
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

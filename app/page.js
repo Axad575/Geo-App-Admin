@@ -109,7 +109,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-between p-24 bg-white">
       <div className="w-1/3 border-2 border-gray-300 rounded-xl shadow-lg bg-white">
-      <h1 className="text-3xl font-semibold text-center rounded-t-xl p-4 bg-green-800 text-white  mb-10"> Geo-App</h1>
+      <h1 className="text-3xl font-semibold text-center rounded-t-xl p-4 bg-green-800 text-white  mb-10"> Geo-Note</h1>
       <form onSubmit={handleLogin} className="flex flex-col space-y-4 p-4">
         <h2 className="text-lg font-medium text-gray-900">{t('auth.email')}:</h2>
         <input

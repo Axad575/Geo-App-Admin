@@ -26,8 +26,7 @@ const strings = {
             meetings: "Встречи",
             notes: "Заметки",
             settings: "Настройки",
-            home: "Главная",
-            users: "Пользователи"
+            home: "Главная"
         },
         
         // Навигация
@@ -542,8 +541,7 @@ const strings = {
             meetings: "Meetings",
             notes: "Notes",
             settings: "Settings",
-            home: "Home",
-            users: "Users"
+            home: "Home"
         },
         
         // Home page
@@ -1009,8 +1007,7 @@ const strings = {
             meetings: "Uchrashuvlar",
             notes: "Eslatmalar",
             settings: "Sozlamalar",
-            home: "Bosh sahifa",
-            users: "Foydalanuvchilar"
+            home: "Bosh sahifa"
         },
         
         // Bosh sahifa
