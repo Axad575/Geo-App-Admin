@@ -103,18 +103,29 @@ const CreateMeetingModal = ({ isOpen, onClose, onSuccess, orgId, projectId = nul
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Структура данных согласно новой схеме БД
+            // Структура данных точно как в вашем примере из БД
             const meetingData = {
-                title: formData.title,
-                datetime: new Date(formData.date).toISOString(),
-                location: formData.location || '',
-                owner: formData.createdBy,
-                projectId: formData.projectId || null,
-                participants: formData.participants,
-                notes: formData.description || '',
                 createdAt: new Date().toISOString(),
+                createdBy: formData.createdBy,
+                date: new Date(formData.date).toISOString(),
+                description: formData.description || '',
+                participants: formData.participants,
+                startedAt: null,
+                status: 'scheduled',
+                title: formData.title,
+                type: 'regular',
                 updatedAt: new Date().toISOString()
             };
+
+            // Добавляем location только если он указан
+            if (formData.location) {
+                meetingData.location = formData.location;
+            }
+
+            // Добавляем projectId только если он указан
+            if (formData.projectId) {
+                meetingData.projectId = formData.projectId;
+            }
 
             // Создание встречи в подколлекции организации
             const meetingsRef = collection(db, `organizations/${orgId}/meetings`);
@@ -131,7 +142,9 @@ const CreateMeetingModal = ({ isOpen, onClose, onSuccess, orgId, projectId = nul
                 createdBy: auth.currentUser?.uid || '',
                 projectId: projectId || '',
                 participants: [],
-                description: ''
+                description: '',
+                status: 'scheduled',
+                type: 'regular'
             });
         } catch (error) {
             console.error('Error creating meeting:', error);

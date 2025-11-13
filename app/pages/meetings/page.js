@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { app, db } from "@/app/api/firebase";
-import { collection, getDocs, query, orderBy, doc, getDoc, updateDoc, addDoc } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, doc, getDoc, updateDoc, addDoc, deleteDoc } from "firebase/firestore";
 import Sidebar from "@/app/components/sidebar";
 import Navbar from "@/app/components/navbar";
 import CreateMeetingModal from "@/app/components/CreateMeetingModal";
@@ -334,293 +334,194 @@ const QuickMeetingModalOld = ({ isOpen, onClose, onSubmit, orgId }) => {
     );
 };
 
-// Обновленный компонент карточки встречи с возможностью входа в конференцию
-const EnhancedMeetingListItem = ({ meeting, users, onMeetingUpdate }) => {
-    const [isUpdating, setIsUpdating] = useState(false);
-    
-    const formatDate = (timestamp) => {
-        if (!timestamp) return '';
-        
-        try {
-            let date;
-            if (timestamp.seconds) {
-                date = new Date(timestamp.seconds * 1000);
-            } else {
-                date = new Date(timestamp);
+// Модальное окно для редактирования встречи
+const EditMeetingModal = ({ isOpen, onClose, meeting, onSuccess, orgId }) => {
+    const [formData, setFormData] = useState({
+        title: '',
+        description: '',
+        location: '',
+        datetime: '',
+        participants: []
+    });
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
+
+    useEffect(() => {
+        if (isOpen && meeting) {
+            // Преобразуем дату в формат datetime-local
+            let dateValue = '';
+            if (meeting.date || meeting.datetime) {
+                try {
+                    const timestamp = meeting.date || meeting.datetime;
+                    let date;
+                    if (timestamp.seconds) {
+                        date = new Date(timestamp.seconds * 1000);
+                    } else {
+                        date = new Date(timestamp);
+                    }
+                    dateValue = date.toISOString().slice(0, 16);
+                } catch (error) {
+                    console.error('Error parsing date:', error);
+                }
             }
-            
-            return date.toLocaleDateString('ru-RU', {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+
+            setFormData({
+                title: meeting.title || '',
+                description: meeting.description || '',
+                location: meeting.location || '',
+                datetime: dateValue,
+                participants: meeting.participants || []
             });
-        } catch (error) {
-            console.error('Error formatting date:', error);
-            return timestamp.toString();
         }
-    };
+    }, [isOpen, meeting]);
 
-    const getStatusColor = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'completed':
-                return 'bg-green-100 text-green-800 border-green-200';
-            case 'in_progress':
-                return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'scheduled':
-            case 'upcoming':
-            case null:
-            case undefined:
-                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'cancelled':
-                return 'bg-red-100 text-red-800 border-red-200';
-            default:
-                return 'bg-gray-100 text-gray-800 border-gray-200';
+    useEffect(() => {
+        if (isOpen && orgId) {
+            fetchUsers();
+            const auth = getAuth();
+            setCurrentUser(auth.currentUser);
         }
-    };
+    }, [isOpen, orgId]);
 
-    const getStatusText = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'completed': return 'Проведена';
-            case 'in_progress': return 'В процессе';
-            case 'scheduled':
-            case 'upcoming':
-            case null:
-            case undefined:
-                return 'Запланирована';
-            case 'cancelled': return 'Отменена';
-            default: return 'Запланирована';
-        }
-    };
-
-    const handleJoinConference = () => {
-        if (meeting.conferenceUrl) {
-            window.open(meeting.conferenceUrl, '_blank');
-        } else {
-            alert('Ссылка на конференцию недоступна');
-        }
-    };
-
-    const handleMarkCompleted = async () => {
-        if (window.confirm('Отметить встречу как проведенную?')) {
-            setIsUpdating(true);
-            try {
-                await onMeetingUpdate(meeting.id, {
-                    status: 'completed',
-                    completedAt: new Date().toISOString()
-                });
-            } catch (error) {
-                console.error('Error marking meeting as completed:', error);
-                alert('Ошибка при обновлении встречи');
-            } finally {
-                setIsUpdating(false);
-            }
-        }
-    };
-
-    const handleStartMeeting = async () => {
-        setIsUpdating(true);
+    const fetchUsers = async () => {
         try {
-            // Если это мгновенная встреча и у неё уже есть conferenceUrl, просто запускаем
-            if (meeting.type === 'instant' && meeting.conferenceUrl) {
-                await onMeetingUpdate(meeting.id, {
-                    status: 'in_progress',
-                    startedAt: new Date().toISOString()
-                });
-                // Открываем конференцию
-                window.open(meeting.conferenceUrl, '_blank');
-            } else {
-                // Для обычных встреч генерируем новую ссылку
-                const conferenceUrl = generateConferenceUrl(meeting.title, meeting.orgId, meeting.id);
-                await onMeetingUpdate(meeting.id, {
-                    status: 'in_progress',
-                    startedAt: new Date().toISOString(),
-                    conferenceUrl: conferenceUrl
-                });
-                // Открываем конференцию
-                window.open(conferenceUrl, '_blank');
-            }
+            const usersSnapshot = await getDocs(collection(db, `organizations/${orgId}/users`));
+            const usersList = usersSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setUsers(usersList);
         } catch (error) {
-            console.error('Error starting meeting:', error);
-            alert('Ошибка при запуске встречи');
+            console.error('Error fetching users:', error);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.title.trim() || !formData.datetime) return;
+
+        setLoading(true);
+        try {
+            const meetingRef = doc(db, `organizations/${orgId}/meetings/${meeting.id}`);
+            await updateDoc(meetingRef, {
+                title: formData.title,
+                description: formData.description,
+                location: formData.location,
+                date: new Date(formData.datetime).toISOString(),
+                datetime: new Date(formData.datetime).toISOString(),
+                participants: formData.participants,
+                updatedAt: new Date().toISOString()
+            });
+
+            onSuccess();
+            onClose();
+        } catch (error) {
+            console.error('Error updating meeting:', error);
+            alert('Ошибка при обновлении встречи');
         } finally {
-            setIsUpdating(false);
+            setLoading(false);
         }
     };
 
-    const handleCancelMeeting = async () => {
-        if (window.confirm('Отменить встречу?')) {
-            setIsUpdating(true);
-            try {
-                await onMeetingUpdate(meeting.id, {
-                    status: 'cancelled',
-                    cancelledAt: new Date().toISOString()
-                });
-            } catch (error) {
-                console.error('Error cancelling meeting:', error);
-                alert('Ошибка при отмене встречи');
-            } finally {
-                setIsUpdating(false);
-            }
-        }
+    const handleParticipantsChange = (participants) => {
+        setFormData(prev => ({ ...prev, participants }));
     };
 
-    // Нормализуем статус для корректной проверки
-    const normalizedStatus = meeting.status?.toLowerCase() || 'scheduled';
-    
-    const isCompleted = normalizedStatus === 'completed';
-    const isInProgress = normalizedStatus === 'in_progress';
-    const isScheduled = normalizedStatus === 'scheduled' || 
-                      normalizedStatus === 'upcoming' || 
-                      !meeting.status || 
-                      normalizedStatus === null;
-    const isCancelled = normalizedStatus === 'cancelled';
+    if (!isOpen) return null;
 
     return (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-4 hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{meeting.title}</h3>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(meeting.status)}`}>
-                            {getStatusText(meeting.status)}
-                        </span>
-                        {meeting.type === 'instant' && (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Мгновенная
-                            </span>
-                        )}
-                        {meeting.conferenceUrl && (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                📹 Видеоконференция
-                            </span>
-                        )}
-                    </div>
-                    
-                    {meeting.description && (
-                        <p className="text-gray-600 mb-3">{meeting.description}</p>
-                    )}
-                    
-                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-500">
-                        <div>
-                            <span className="font-medium">Дата:</span> {formatDate(meeting.date)}
-                        </div>
-                        {meeting.location && (
-                            <div>
-                                <span className="font-medium">Место:</span> {meeting.location}
-                            </div>
-                        )}
-                        {meeting.completedAt && (
-                            <div>
-                                <span className="font-medium">Завершена:</span> {formatDate(meeting.completedAt)}
-                            </div>
-                        )}
-                        {meeting.startedAt && (
-                            <div>
-                                <span className="font-medium">Начата:</span> {formatDate(meeting.startedAt)}
-                            </div>
-                        )}
-                    </div>
-
-                    {meeting.participants && meeting.participants.length > 0 && (
-                        <div className="mt-3">
-                            <span className="text-sm font-medium text-gray-700">Участники: </span>
-                            <div className="flex flex-wrap gap-2 mt-1">
-                                {meeting.participants.map((participantId) => (
-                                    <span 
-                                        key={participantId}
-                                        className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs"
-                                    >
-                                        {users[participantId] || participantId}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold">Редактировать встречу</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
 
-                <div className="flex flex-col gap-2 ml-4">
-                    {/* Кнопка входа в конференцию для активных встреч */}
-                    {(isInProgress || (isScheduled && meeting.conferenceUrl)) && meeting.conferenceUrl && (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Название *
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.title}
+                            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Описание
+                        </label>
+                        <textarea
+                            value={formData.description}
+                            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="3"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Дата и время *
+                        </label>
+                        <input
+                            type="datetime-local"
+                            required
+                            value={formData.datetime}
+                            onChange={(e) => setFormData(prev => ({ ...prev, datetime: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Место проведения
+                        </label>
+                        <input
+                            type="text"
+                            value={formData.location}
+                            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <ParticipantSelector
+                        users={users}
+                        selectedParticipants={formData.participants}
+                        onParticipantsChange={handleParticipantsChange}
+                        excludeUserIds={currentUser ? [currentUser.uid] : []}
+                        label="Участники"
+                        placeholder="Поиск участников..."
+                        maxHeight="200px"
+                        showSelectedCount={true}
+                    />
+
+                    <div className="flex gap-3 pt-4">
                         <button
-                            onClick={handleJoinConference}
-                            className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1"
+                            type="submit"
+                            disabled={loading}
+                            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                            Войти в конференцию
+                            {loading ? 'Сохранение...' : 'Сохранить'}
                         </button>
-                    )}
-
-                    {isCompleted ? (
-                        <div className="flex items-center text-green-600 text-sm">
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                            Проведена
-                        </div>
-                    ) : isCancelled ? (
-                        <div className="flex items-center text-red-600 text-sm">
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            Отменена
-                        </div>
-                    ) : isInProgress ? (
-                        <div className="flex flex-col gap-2">
-                            <button
-                                onClick={handleMarkCompleted}
-                                disabled={isUpdating}
-                                className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center gap-1"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                {isUpdating ? '...' : 'Завершить'}
-                            </button>
-                            <button
-                                onClick={handleCancelMeeting}
-                                disabled={isUpdating}
-                                className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
-                            >
-                                {isUpdating ? '...' : 'Отменить'}
-                            </button>
-                        </div>
-                    ) : isScheduled ? (
-                        <div className="flex flex-col gap-2">
-                            <button
-                                onClick={handleStartMeeting}
-                                disabled={isUpdating}
-                                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-1"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                                {isUpdating ? '...' : 'Начать'}
-                            </button>
-                            <button
-                                onClick={handleMarkCompleted}
-                                disabled={isUpdating}
-                                className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center gap-1"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                {isUpdating ? '...' : 'Проведено'}
-                            </button>
-                            <button
-                                onClick={handleCancelMeeting}
-                                disabled={isUpdating}
-                                className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
-                            >
-                                {isUpdating ? '...' : 'Отменить'}
-                            </button>
-                        </div>
-                    ) : null}
-                </div>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            disabled={loading}
+                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 transition-colors"
+                        >
+                            Отмена
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );
@@ -634,6 +535,8 @@ export default function Meetings() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isQuickMeetingModalOpen, setIsQuickMeetingModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingMeeting, setEditingMeeting] = useState(null);
     const [users, setUsers] = useState({});
     const [orgId, setOrgId] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
@@ -719,6 +622,25 @@ export default function Meetings() {
             console.error('Error updating meeting:', error);
             throw error;
         }
+    };
+
+    const handleDeleteMeeting = async (meetingId) => {
+        if (!window.confirm('Вы уверены, что хотите удалить эту встречу?')) {
+            return;
+        }
+
+        try {
+            await deleteDoc(doc(db, `organizations/${orgId}/meetings/${meetingId}`));
+            await fetchMeetings(orgId, currentUser.uid);
+        } catch (error) {
+            console.error('Error deleting meeting:', error);
+            alert('Ошибка при удалении встречи');
+        }
+    };
+
+    const handleEditMeeting = (meeting) => {
+        setEditingMeeting(meeting);
+        setIsEditModalOpen(true);
     };
 
     const handleQuickMeeting = async (meetingData) => {
@@ -968,15 +890,174 @@ export default function Meetings() {
                             )}
                         </div>
                     ) : (
-                        <div className="max-w-4xl">
-                            {filteredMeetings.map((meeting) => (
-                                <EnhancedMeetingListItem 
-                                    key={meeting.id} 
-                                    meeting={meeting}
-                                    users={users}
-                                    onMeetingUpdate={handleMeetingUpdate}
-                                />
-                            ))}
+                        <div className="bg-white rounded-lg shadow overflow-hidden">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Название
+                                        </th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Дата и время
+                                        </th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Место
+                                        </th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Участники
+                                        </th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Статус
+                                        </th>
+                                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Действия
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {filteredMeetings.map((meeting) => {
+                                        const formatDate = (timestamp) => {
+                                            if (!timestamp) return '';
+                                            try {
+                                                let date;
+                                                if (timestamp.seconds) {
+                                                    date = new Date(timestamp.seconds * 1000);
+                                                } else {
+                                                    date = new Date(timestamp);
+                                                }
+                                                return date.toLocaleString('ru-RU', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                });
+                                            } catch (error) {
+                                                return '';
+                                            }
+                                        };
+
+                                        const getStatusBadge = (status) => {
+                                            const normalizedStatus = status?.toLowerCase() || 'scheduled';
+                                            const badges = {
+                                                'completed': 'bg-green-100 text-green-800',
+                                                'in_progress': 'bg-blue-100 text-blue-800',
+                                                'scheduled': 'bg-yellow-100 text-yellow-800',
+                                                'upcoming': 'bg-yellow-100 text-yellow-800',
+                                                'cancelled': 'bg-red-100 text-red-800'
+                                            };
+                                            const statusTexts = {
+                                                'completed': 'Проведена',
+                                                'in_progress': 'В процессе',
+                                                'scheduled': 'Запланирована',
+                                                'upcoming': 'Запланирована',
+                                                'cancelled': 'Отменена'
+                                            };
+                                            const badgeClass = badges[normalizedStatus] || 'bg-gray-100 text-gray-800';
+                                            const statusText = statusTexts[normalizedStatus] || 'Запланирована';
+                                            
+                                            return (
+                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${badgeClass}`}>
+                                                    {statusText}
+                                                </span>
+                                            );
+                                        };
+
+                                        const normalizedStatus = meeting.status?.toLowerCase() || 'scheduled';
+                                        const isCompleted = normalizedStatus === 'completed';
+                                        const isCancelled = normalizedStatus === 'cancelled';
+                                        const canEdit = !isCompleted && !isCancelled;
+
+                                        return (
+                                            <tr key={meeting.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex items-center">
+                                                        <div>
+                                                            <div className="text-sm font-medium text-gray-900">
+                                                                {meeting.title}
+                                                            </div>
+                                                            {meeting.description && (
+                                                                <div className="text-sm text-gray-500 truncate max-w-xs">
+                                                                    {meeting.description}
+                                                                </div>
+                                                            )}
+                                                            {meeting.type === 'instant' && (
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mt-1">
+                                                                    Мгновенная
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-gray-900">{formatDate(meeting.date)}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-gray-900">
+                                                        {meeting.location || '-'}
+                                                    </div>
+                                                    {meeting.conferenceUrl && (
+                                                        <button
+                                                            onClick={() => window.open(meeting.conferenceUrl, '_blank')}
+                                                            className="text-xs text-purple-600 hover:text-purple-900 flex items-center gap-1 mt-1"
+                                                        >
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                            </svg>
+                                                            Видео
+                                                        </button>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {meeting.participants && meeting.participants.length > 0 ? (
+                                                            meeting.participants.slice(0, 3).map((participantId, idx) => (
+                                                                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                    {users[participantId] || participantId}
+                                                                </span>
+                                                            ))
+                                                        ) : (
+                                                            <span className="text-sm text-gray-500">-</span>
+                                                        )}
+                                                        {meeting.participants && meeting.participants.length > 3 && (
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                                +{meeting.participants.length - 3}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {getStatusBadge(meeting.status)}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        {canEdit && (
+                                                            <button
+                                                                onClick={() => handleEditMeeting(meeting)}
+                                                                className="text-blue-600 hover:text-blue-900"
+                                                                title="Редактировать"
+                                                            >
+                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                </svg>
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleDeleteMeeting(meeting.id)}
+                                                            className="text-red-600 hover:text-red-900"
+                                                            title="Удалить"
+                                                        >
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
                         </div>
                     )}
                 </div>
@@ -994,6 +1075,17 @@ export default function Meetings() {
                             isOpen={isQuickMeetingModalOpen}
                             onClose={() => setIsQuickMeetingModalOpen(false)}
                             onSubmit={handleQuickMeeting}
+                            orgId={orgId}
+                        />
+
+                        <EditMeetingModal
+                            isOpen={isEditModalOpen}
+                            onClose={() => {
+                                setIsEditModalOpen(false);
+                                setEditingMeeting(null);
+                            }}
+                            meeting={editingMeeting}
+                            onSuccess={handleSuccess}
                             orgId={orgId}
                         />
                     </>
