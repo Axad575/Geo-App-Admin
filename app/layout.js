@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Geo-Note",
+  title: "Geo-Note-Admin",
   description: "GeoNote is a modern, full-stack web application designed for efficient team collaboration, meeting management, and personal note-taking",
 };
 

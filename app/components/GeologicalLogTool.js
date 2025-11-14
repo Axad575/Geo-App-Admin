@@ -120,16 +120,29 @@ const GeologicalLogTool = ({ onSave, initialData = null }) => {
         // Настройки
         const leftMargin = 60;
         const rightMargin = 50;
-        const topMargin = 50;
+        const topMargin = 80;
         const logWidth = width - leftMargin - rightMargin;
         const scale = logData.scale;
 
         // Заголовок
         ctx.fillStyle = '#000';
         ctx.font = 'bold 16px Arial';
-        ctx.fillText(logData.wellName || 'Геологический лог', leftMargin, 25);
-        ctx.font = '12px Arial';
-        ctx.fillText(logData.location ? `Локация: ${logData.location}` : '', leftMargin, 40);
+        ctx.textAlign = 'left';
+        ctx.fillText(logData.wellName || 'Геологический лог', leftMargin, 20);
+        
+        ctx.font = '11px Arial';
+        let headerY = 35;
+        if (logData.location) {
+            ctx.fillText(`Локация: ${logData.location}`, leftMargin, headerY);
+            headerY += 14;
+        }
+        if (logData.elevation) {
+            ctx.fillText(`Высота устья: ${logData.elevation} м`, leftMargin, headerY);
+            headerY += 14;
+        }
+        if (logData.totalDepth) {
+            ctx.fillText(`Общая глубина: ${logData.totalDepth} м`, leftMargin, headerY);
+        }
 
         // Сетка и глубины
         if (showGrid) {
@@ -148,12 +161,32 @@ const GeologicalLogTool = ({ onSave, initialData = null }) => {
                 ctx.lineTo(width - rightMargin, y);
                 ctx.stroke();
 
-                // Метка глубины
+                // Метка глубины (выровнена по линии)
                 ctx.fillStyle = '#000';
                 ctx.font = '10px Arial';
                 ctx.textAlign = 'right';
-                ctx.fillText(`${depth}m`, leftMargin - 5, y + 3);
+                ctx.fillText(`${depth}m`, leftMargin - 5, y + 4);
             }
+        }
+        
+        // Глубины на границах слоев (без сетки)
+        if (!showGrid && logData.layers.length > 0) {
+            ctx.fillStyle = '#000';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'right';
+            
+            // Собираем уникальные глубины
+            const uniqueDepths = new Set();
+            logData.layers.forEach(layer => {
+                uniqueDepths.add(layer.depthFrom);
+                uniqueDepths.add(layer.depthTo);
+            });
+            
+            // Отрисовываем метки
+            Array.from(uniqueDepths).sort((a, b) => a - b).forEach(depth => {
+                const y = topMargin + (depth * scale / 10);
+                ctx.fillText(`${depth}m`, leftMargin - 5, y + 4);
+            });
         }
 
         // Рисование слоев
@@ -182,13 +215,19 @@ const GeologicalLogTool = ({ onSave, initialData = null }) => {
                 ctx.strokeRect(leftMargin, yStart, logWidth, layerHeight);
             }
 
-            // Название литологии
+            // Название литологии и размер зерна
             if (layerHeight > 20) {
                 ctx.fillStyle = '#000';
                 ctx.font = 'bold 11px Arial';
                 ctx.textAlign = 'center';
                 const text = lithologyTypes[layer.lithology].name;
-                ctx.fillText(text, leftMargin + logWidth / 2, yStart + layerHeight / 2);
+                ctx.fillText(text, leftMargin + logWidth / 2, yStart + layerHeight / 2 - 5);
+                
+                // Размер зерна под названием
+                if (layer.grain_size) {
+                    ctx.font = '9px Arial';
+                    ctx.fillText(`(${grainSizes[layer.grain_size]})`, leftMargin + logWidth / 2, yStart + layerHeight / 2 + 8);
+                }
             }
 
             // Описание справа
@@ -308,13 +347,20 @@ const GeologicalLogTool = ({ onSave, initialData = null }) => {
 
     // Легенда
     const drawLegend = (ctx, width, height) => {
-        const legendX = 10;
-        const legendY = height - 150;
+        // Получаем уникальные типы литологии из добавленных слоев
+        const usedLithologies = [...new Set(logData.layers.map(layer => layer.lithology))];
         
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.fillRect(legendX, legendY, 200, 140);
+        if (usedLithologies.length === 0) return;
+        
+        const legendX = 10;
+        const legendHeight = 30 + (usedLithologies.length * 20) + 10;
+        const legendY = height - legendHeight - 10;
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.fillRect(legendX, legendY, 200, legendHeight);
         ctx.strokeStyle = '#000';
-        ctx.strokeRect(legendX, legendY, 200, 140);
+        ctx.lineWidth = 1;
+        ctx.strokeRect(legendX, legendY, 200, legendHeight);
 
         ctx.fillStyle = '#000';
         ctx.font = 'bold 12px Arial';
@@ -323,14 +369,17 @@ const GeologicalLogTool = ({ onSave, initialData = null }) => {
 
         ctx.font = '10px Arial';
         let yOffset = 35;
-        Object.entries(lithologyTypes).slice(0, 5).forEach(([key, value]) => {
-            ctx.fillStyle = value.color;
+        usedLithologies.forEach(lithologyKey => {
+            const lithology = lithologyTypes[lithologyKey];
+            
+            ctx.fillStyle = lithology.color;
             ctx.fillRect(legendX + 10, legendY + yOffset, 20, 15);
             ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
             ctx.strokeRect(legendX + 10, legendY + yOffset, 20, 15);
             
             ctx.fillStyle = '#000';
-            ctx.fillText(value.name, legendX + 35, legendY + yOffset + 11);
+            ctx.fillText(lithology.name, legendX + 35, legendY + yOffset + 11);
             yOffset += 20;
         });
     };
@@ -576,6 +625,22 @@ const GeologicalLogTool = ({ onSave, initialData = null }) => {
                             height={800}
                             className="border border-gray-300 bg-white mx-auto"
                         />
+                    </div>
+                </div>
+            </div>
+
+            {/* Уведомление о необходимости сохранения */}
+            <div className="mt-6 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg">
+                <div className="flex items-start gap-3">
+                    <svg className="w-6 h-6 text-yellow-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <p className="font-semibold text-yellow-900 mb-1">⚠️ Важно! Не забудьте сохранить лог</p>
+                        <p className="text-sm text-yellow-800">
+                            После создания или редактирования слоев обязательно нажмите кнопку <strong>"💾 Сохранить"</strong> вверху страницы. 
+                            Без сохранения все изменения будут потеряны при закрытии редактора.
+                        </p>
                     </div>
                 </div>
             </div>
