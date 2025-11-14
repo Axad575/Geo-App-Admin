@@ -2,8 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getAuth } from 'firebase/auth';
-import { app, db } from '@/app/api/firebase';
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { app, db, storage } from '@/app/api/firebase';
+import { doc, getDoc, collection, getDocs, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
+import { ref, deleteObject } from 'firebase/storage';
 import { useStrings } from "@/app/hooks/useStrings";
 import InteractiveMap from '@/app/components/InteractiveMap';
 
@@ -20,6 +21,7 @@ const ViewNotePage = () => {
     const [note, setNote] = useState(null);
     const [users, setUsers] = useState({});
     const [loading, setLoading] = useState(true);
+    const [deleting, setDeleting] = useState(false);
 
     // Получаем локаль для форматирования даты
     const getLocale = () => {
@@ -135,6 +137,87 @@ const ViewNotePage = () => {
             : (decimal >= 0 ? 'E' : 'W');
             
         return `${degrees}°${minutes}'${seconds}"${direction}`;
+    };
+
+    // Функция для добавления записи в историю действий
+    const addToHistory = async (action, details) => {
+        try {
+            const historyEntry = {
+                id: Date.now().toString(),
+                action: action,
+                details: details,
+                author: auth.currentUser?.uid || '',
+                authorName: users[auth.currentUser?.uid] || auth.currentUser?.email || 'Unknown',
+                timestamp: new Date().toISOString()
+            };
+
+            const projectRef = doc(db, `organizations/${orgId}/projects/${projectId}`);
+            await updateDoc(projectRef, {
+                history: arrayUnion(historyEntry)
+            });
+        } catch (error) {
+            console.error('Error adding to history:', error);
+        }
+    };
+
+    // Функция удаления файлов из Storage
+    const deleteAttachments = async (attachments) => {
+        if (!attachments || attachments.length === 0) return;
+        
+        try {
+            for (const file of attachments) {
+                if (file.path) {
+                    const fileRef = ref(storage, file.path);
+                    try {
+                        await deleteObject(fileRef);
+                    } catch (error) {
+                        console.warn(`Could not delete file ${file.name}:`, error);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error deleting attachments:', error);
+        }
+    };
+
+    // Функция удаления заметки
+    const handleDeleteNote = async () => {
+        if (!window.confirm('Вы уверены, что хотите удалить эту заметку? Это действие нельзя отменить.')) {
+            return;
+        }
+
+        setDeleting(true);
+        try {
+            // Удаляем прикрепленные файлы из Storage
+            if (note.attachments && note.attachments.length > 0) {
+                await deleteAttachments(note.attachments);
+            }
+
+            // Удаляем заметку из массива notes проекта
+            const projectRef = doc(db, `organizations/${orgId}/projects/${projectId}`);
+            await updateDoc(projectRef, {
+                notes: arrayRemove(note)
+            });
+
+            // Добавляем в историю
+            await addToHistory('note_deleted', {
+                noteTitle: note.title,
+                noteId: noteId,
+                deletedBy: auth.currentUser?.uid,
+                deletedByName: users[auth.currentUser?.uid] || auth.currentUser?.email,
+                hadAttachments: (note.attachments?.length || 0) > 0,
+                attachmentCount: note.attachments?.length || 0,
+                hadLocation: !!note.location,
+                hadGeologicalLog: !!note.geologicalLog
+            });
+
+            // Возвращаемся на страницу проекта
+            router.push(`/pages/projects/${projectId}`);
+        } catch (error) {
+            console.error('Error deleting note:', error);
+            alert('Ошибка при удалении заметки. Пожалуйста, попробуйте снова.');
+            setDeleting(false);
+        }
     };
 
     if (loading || !note || !project) {
@@ -408,18 +491,14 @@ const ViewNotePage = () => {
                                     Редактировать
                                 </button>
                                 <button
-                                    onClick={() => {
-                                        if (window.confirm('Вы уверены, что хотите удалить эту заметку?')) {
-                                            // TODO: Реализовать удаление
-                                            alert('Функция удаления будет реализована');
-                                        }
-                                    }}
-                                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                                    onClick={handleDeleteNote}
+                                    disabled={deleting}
+                                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
-                                    Удалить
+                                    {deleting ? 'Удаление...' : 'Удалить'}
                                 </button>
                             </div>
                         </div>
