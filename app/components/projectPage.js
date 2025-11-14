@@ -3,9 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuth } from 'firebase/auth';
 import { app, db, storage } from '@/app/api/firebase';
-import { doc, getDoc, updateDoc, arrayUnion, collection, addDoc, getDocs } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { uploadNoteFile } from '@/app/utils/fileStorage';
+import { doc, getDoc, updateDoc, arrayUnion, collection, getDocs } from 'firebase/firestore';
 import AddLocationModal from './AddLocationModal';
 import InteractiveMap from './InteractiveMap';
 import jsPDF from 'jspdf';
@@ -29,16 +27,8 @@ const ProjectPage = ({ projectId, orgId }) => {
     const [project, setProject] = useState(null);
     const [users, setUsers] = useState({});
     const [loading, setLoading] = useState(true);
-    const [newNote, setNewNote] = useState({
-        title: '',
-        description: '',
-        locationId: ''
-    });
-    const [showAddNote, setShowAddNote] = useState(false);
     const [showAddLocation, setShowAddLocation] = useState(false);
     const [selectedMapLocation, setSelectedMapLocation] = useState(null);
-    const [attachedFiles, setAttachedFiles] = useState([]);
-    const [uploadingFiles, setUploadingFiles] = useState(false);
 
     // Функция для добавления записи в историю действий
     const addToHistory = async (action, details) => {
@@ -103,134 +93,6 @@ const ProjectPage = ({ projectId, orgId }) => {
             setLoading(false);
         }
     }, [projectId, orgId]);
-
-
-// Функция загрузки файла
-const uploadProjectFile = async (file, projectId, noteId) => {
-    try {
-        const timestamp = Date.now();
-        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const path = `projects/${projectId}/notes/${noteId}/files/${timestamp}_${sanitizedName}`;
-        
-        const fileRef = ref(storage, path);
-        const snapshot = await uploadBytes(fileRef, file);
-        const downloadURL = await getDownloadURL(snapshot.ref);
-        
-        return {
-            url: downloadURL,
-            path: path,
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            uploadedAt: new Date().toISOString(),
-            uploadedBy: auth.currentUser?.uid
-        };
-    } catch (error) {
-        console.error('Error uploading file:', error);
-        throw error;
-    }
-};
-
-// Функция для обработки выбора файлов
-const handleFileSelect = async (files) => {
-    if (!files || files.length === 0) return;
-    
-    setUploadingFiles(true);
-    const uploadedFiles = [];
-    
-    try {
-        for (const file of Array.from(files)) {
-            // Проверка размера файла (максимум 10MB)
-            if (file.size > 10 * 1024 * 1024) {
-                alert(`Файл ${file.name} слишком большой. Максимум 10MB.`);
-                continue;
-            }
-            
-            // Создаем временный ID для заметки
-            const tempNoteId = Date.now().toString();
-            
-            const uploadedFile = await uploadProjectFile(
-                file, 
-                projectId, 
-                tempNoteId
-            );
-            
-            uploadedFiles.push(uploadedFile);
-        }
-        
-        setAttachedFiles(prev => [...prev, ...uploadedFiles]);
-        alert(`Загружено файлов: ${uploadedFiles.length}`);
-    } catch (error) {
-        console.error('File upload error:', error);
-        alert('Ошибка загрузки файлов');
-    } finally {
-        setUploadingFiles(false);
-    }
-};
-
-// Функция удаления файла
-const removeFile = (index) => {
-    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
-};
-
-
-
-    // Добавление новой заметки
-    // Обновите функцию handleAddNote:
-const handleAddNote = async () => {
-    if (!newNote.title.trim()) return;
-
-    try {
-        // Найти выбранную локацию
-        const selectedLocation = newNote.locationId 
-            ? project.locations?.find(loc => loc.id === newNote.locationId)
-            : null;
-
-        const noteData = {
-            id: Date.now().toString(),
-            title: newNote.title,
-            description: newNote.description,
-            author: auth.currentUser?.uid,
-            authorName: users[auth.currentUser?.uid] || auth.currentUser?.email,
-            createdAt: new Date().toISOString(),
-            location: selectedLocation ? {
-                id: selectedLocation.id,
-                name: selectedLocation.name,
-                latitude: selectedLocation.latitude,
-                longitude: selectedLocation.longitude
-            } : null,
-            attachments: attachedFiles // Добавляем прикрепленные файлы
-        };
-
-        // Добавляем заметку в массив notes проекта
-        const projectRef = doc(db, `organizations/${orgId}/projects/${projectId}`);
-        await updateDoc(projectRef, {
-            notes: arrayUnion(noteData)
-        });
-
-        // Добавляем в историю
-        await addToHistory('note_added', {
-            noteTitle: newNote.title,
-            hasLocation: !!selectedLocation,
-            locationName: selectedLocation?.name,
-            hasAttachments: attachedFiles.length > 0,
-            attachmentCount: attachedFiles.length
-        });
-
-        // Обновляем локальное состояние
-        setProject(prev => ({
-            ...prev,
-            notes: [...(prev.notes || []), noteData]
-        }));
-
-        // Очищаем форму
-        setNewNote({ title: '', description: '', locationId: '' });
-        setAttachedFiles([]); // Очищаем прикрепленные файлы
-        setShowAddNote(false);
-    } catch (error) {
-        console.error('Error adding note:', error);
-    }
-};
 
     // Добавление новой точки на карту
     const handleAddLocation = async (locationData) => {
@@ -646,244 +508,66 @@ const handleAddNote = async () => {
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-xl font-semibold">{t('notes.title')}:</h2>
                             <button
-                                onClick={() => setShowAddNote(true)}
-                                className="text-blue-600 hover:text-blue-800 font-medium"
+                                onClick={() => router.push(`/pages/projects/${projectId}/notes/create`)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                             >
-                                {t('notes.addNote')}
+                                + {t('notes.addNote')}
                             </button>
                         </div>
 
-                        {/* Add Note Form */}
-                        {showAddNote && (
-                            <div className="mb-4 p-4 bg-blue-50  rounded-lg">
-                                <div className="space-y-4">
-                                    {/* Note Title */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            {t('notes.noteTitle')} *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={newNote.title}
-                                            onChange={(e) => setNewNote(prev => ({ ...prev, title: e.target.value }))}
-                                            placeholder={t('notes.enterTitle')}
-                                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                    </div>
-
-                                    {/* Note Description */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            {t('projects.description')}
-                                        </label>
-                                        <textarea
-                                            value={newNote.description}
-                                            onChange={(e) => setNewNote(prev => ({ ...prev, description: e.target.value }))}
-                                            placeholder={t('notes.enterDescription')}
-                                            className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            rows="3"
-                                        />
-                                    </div>
-
-                                    {/* Location Selection */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            {t('notes.linkToLocation')}
-                                        </label>
-                                        <select
-                                            value={newNote.locationId}
-                                            onChange={(e) => setNewNote(prev => ({ ...prev, locationId: e.target.value }))}
-                                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            <option value="">{t('notes.noLocation')}</option>
-                                            {project.locations && project.locations.map((location) => (
-                                                <option key={location.id} value={location.id}>
-                                                    {location.name}
-                                                    {location.latitude && location.longitude && 
-                                                        ` (${location.latitude}, ${location.longitude})`
-                                                    }
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {(!project.locations || project.locations.length === 0) && (
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                {t('notes.addLocationFirst')}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* File Upload Section */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            📎 Прикрепить файлы
-                                        </label>
-                                        
-                                        {/* File Drop Zone */}
-                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                                            <input
-                                                type="file"
-                                                multiple
-                                                id="file-upload"
-                                                className="hidden"
-                                                onChange={(e) => handleFileSelect(e.target.files)}
-                                                accept="image/*,application/pdf,.doc,.docx,.txt,.csv,.kml,.gpx"
-                                            />
-                                            
-                                            <label htmlFor="file-upload" className="cursor-pointer">
-                                                <div className="space-y-2">
-                                                    <svg className="w-8 h-8 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                                    </svg>
-                                                    <p className="text-sm text-gray-500">
-                                                        {uploadingFiles ? 'Загрузка файлов...' : 'Нажмите или перетащите файлы сюда'}
-                                                    </p>
-                                                    <p className="text-xs text-gray-400">
-                                                        Поддержка: изображения, PDF, документы, геоданные (максимум 10MB)
-                                                    </p>
-                                                </div>
-                                            </label>
-                                        </div>
-
-                                        {/* Attached Files List */}
-                                        {attachedFiles.length > 0 && (
-                                            <div className="mt-3 space-y-2">
-                                                <p className="text-sm font-medium text-gray-700">
-                                                    Прикрепленные файлы ({attachedFiles.length}):
-                                                </p>
-                                                {attachedFiles.map((file, index) => (
-                                                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                        <div className="flex items-center space-x-2">
-                                                            <span className="text-sm">
-                                                                {file.type.startsWith('image/') ? '🖼️' : 
-                                                                 file.type.includes('pdf') ? '📄' : 
-                                                                 file.name.endsWith('.kml') ? '🗺️' : '📎'}
-                                                            </span>
-                                                            <div>
-                                                                <p className="text-sm font-medium text-gray-700">
-                                                                    {file.name}
-                                                                </p>
-                                                                <p className="text-xs text-gray-500">
-                                                                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeFile(index)}
-                                                            className="text-red-500 hover:text-red-700 text-sm"
-                                                        >
-                                                            ✕
-                                                        </button>
-                                                        
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-2 mt-4">
-                                    <button
-                                        onClick={handleAddNote}
-                                        disabled={!newNote.title.trim()}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {t('notes.addNote')}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setShowAddNote(false);
-                                            setNewNote({ title: '', description: '', locationId: '' });
-                                        }}
-                                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-                                    >
-                                        {t('cancel')}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
                         <div className="bg-gray-100 p-4 rounded-lg min-h-[150px]">
                             {project.notes && project.notes.length > 0 ? (
-                                <div className="space-y-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     {project.notes.map((note, index) => (
-                                        <div key={index} className="bg-white p-4 rounded-lg shadow-sm">
-                                            <div className="flex items-start justify-between">
+                                        <div key={index} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                                            <div className="flex flex-col h-full">
                                                 <div className="flex-1">
-                                                    <h4 className="font-semibold text-gray-800 mb-2">
+                                                    <h4 className="font-semibold text-gray-800 mb-2 line-clamp-1">
                                                         {note.title || note.text}
                                                     </h4>
                                                     {note.description && (
-                                                        <p className="text-gray-600 mb-2">{note.description}</p>
+                                                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                                            {note.description}
+                                                        </p>
                                                     )}
-                                                    {note.location && (
-                                                        <div className="mb-2 p-2 bg-blue-50 rounded-lg">
-                                                            <div className="flex items-center gap-2 text-sm">
-                                                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    
+                                                    {/* Индикаторы */}
+                                                    <div className="flex items-center gap-3 mb-3 text-xs text-gray-500">
+                                                        {note.location && (
+                                                            <div className="flex items-center gap-1">
+                                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                                                 </svg>
-                                                                <span className="text-blue-700 font-medium">
-                                                                    {note.location.name}
-                                                                </span>
-                                                                {note.location.latitude && note.location.longitude && (
-                                                                    <div className="text-blue-600 text-xs">
-                                                                        <div>{t('map.decimal')}: {Number(note.location.latitude).toFixed(4)}, {Number(note.location.longitude).toFixed(4)}</div>
-                                                                        <div>{t('map.dms')}: {decimalToDMS(Number(note.location.latitude), true)}, {decimalToDMS(Number(note.location.longitude), false)}</div>
-                                                                    </div>
-                                                                )}
+                                                                <span>{note.location.name}</span>
                                                             </div>
-                                                        </div>
-                                                    )}
-                                                    {note.attachments && note.attachments.length > 0 && (
-                                                        <div className="mt-2 flex items-center space-x-2">
-                                                            <span className="text-xs text-gray-500">📎</span>
-                                                            <span className="text-xs text-gray-500">
-                                                                {note.attachments.length} {t('files.filesAttached')}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                        )}
+                                                        {note.attachments && note.attachments.length > 0 && (
+                                                            <div className="flex items-center gap-1">
+                                                                <span>📎</span>
+                                                                <span>{note.attachments.length}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="text-xs text-gray-500 mb-3">
                                                         <span>{note.authorName}</span>
-                                                        <span>•</span>
+                                                        <span className="mx-1">•</span>
                                                         <span>{formatDate(note.createdAt)}</span>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            {/* Отображение прикрепленных файлов */}
-                                            {note.attachments && note.attachments.length > 0 && (
-                                                <div className="mt-2">
-                                                    <h5 className="text-sm font-medium text-gray-700 mb-2">
-                                                        📎 Прикрепленные файлы ({note.attachments.length}):
-                                                    </h5>
-                                                    <div className="space-y-1">
-                                                        {note.attachments.map((file, fileIndex) => (
-                                                            <div key={fileIndex} className="flex items-center justify-between p-2 bg-gray-100 rounded text-xs">
-                                                                <div className="flex items-center space-x-2">
-                                                                    <span>
-                                                                        {file.type.startsWith('image/') ? '🖼️' : 
-                                                                         file.type.includes('pdf') ? '📄' : 
-                                                                         file.name.endsWith('.kml') ? '🗺️' : '📎'}
-                                                                    </span>
-                                                                    <span className="text-gray-700">{file.name}</span>
-                                                                    <span className="text-gray-500">
-                                                                        ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                                                                    </span>
-                                                                </div>
-                                                                <a
-                                                                    href={file.url}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="text-blue-600 hover:text-blue-800 text-xs"
-                                                                >
-                                                                    Посмотреть
-                                                                </a>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
+                                                {/* Кнопка просмотра */}
+                                                <button
+                                                    onClick={() => router.push(`/pages/projects/${projectId}/notes/${note.id}`)}
+                                                    className="w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                    </svg>
+                                                    Просмотреть
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
