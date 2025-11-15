@@ -30,6 +30,12 @@ export default function Sidebar() {
         router.push("/pages/users");
     };
 
+    const subscriptionBtn = (e) => {
+        e.preventDefault();
+        console.log("Subscription button clicked");
+        router.push("/pages/subscription");
+    };
+
 
   return (
     <div className="sticky top-2 w-56 h-screen bg-green-800 text-white flex flex-col justify-between rounded-lg shadow-lg m-2 shrink-0 z-10">
@@ -48,6 +54,9 @@ export default function Sidebar() {
           </button>
           <button onClick={usersBtn} className="bg-green-400 text-black py-2 rounded-md hover:bg-green-300 transition">
             Пользователи
+          </button>
+          <button onClick={subscriptionBtn} className="bg-green-400 text-black py-2 rounded-md hover:bg-green-300 transition">
+            Подписка
           </button>
           
         </div>
