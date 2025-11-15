@@ -28,6 +28,42 @@ export default function Home() {
     }
   }, []);
 
+  const checkSubscription = async (userId) => {
+    try {
+      const { collection, getDocs, doc, getDoc } = await import('firebase/firestore');
+      const organizationsSnapshot = await getDocs(collection(db, 'organizations'));
+      
+      for (const orgDoc of organizationsSnapshot.docs) {
+        const userInOrgDoc = await getDoc(doc(db, `organizations/${orgDoc.id}/users/${userId}`));
+        if (userInOrgDoc.exists()) {
+          // Проверяем подписку организации
+          const subDoc = await getDoc(doc(db, `organizations/${orgDoc.id}/subscription/current`));
+          
+          if (!subDoc.exists()) {
+            return false; // Подписки нет
+          }
+          
+          const subscription = subDoc.data();
+          const now = new Date();
+          const endDate = subscription.endDate ? new Date(subscription.endDate) : null;
+          const isExpired = endDate && endDate < now;
+          
+          // Проверяем активна ли подписка
+          if ((subscription.status === 'active' || subscription.status === 'trial') && !isExpired) {
+            return true; // Подписка активна
+          }
+          
+          return false; // Подписка неактивна или истекла
+        }
+      }
+      
+      return false; // Пользователь не найден в организации
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      return false;
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     const email = e.target.email.value;
@@ -43,7 +79,14 @@ export default function Home() {
           await auth.signOut();
           router.push('/');
         } else {
-          router.push('/pages/homeScreen');
+          // Проверяем подписку перед переходом
+          const hasActiveSubscription = await checkSubscription(auth.currentUser.uid);
+          
+          if (hasActiveSubscription) {
+            router.push('/pages/homeScreen');
+          } else {
+            router.push('/pages/subscription');
+          }
         }
         break;
       }

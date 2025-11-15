@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStrings } from "@/app/hooks/useStrings";
+import { useSubscription } from "@/app/contexts/SubscriptionContext";
 
 export default function Navbar() {
   const { t } = useStrings();
   const [coords, setCoords] = useState(t('navbar.determining'));
   const router = useRouter();
+  const { subscriptionActive } = useSubscription();
 
   // Получаем координаты при загрузке
   useEffect(() => {
@@ -38,8 +40,12 @@ export default function Navbar() {
       {/* Правая часть */}
       <div className="flex items-center space-x-6">
         <span
-          className="material-symbols-outlined text-lg cursor-pointer hover:text-green-300 transition"
-          onClick={() => router.push("/pages/homeScreen")}
+          className={`material-symbols-outlined text-lg transition ${
+            subscriptionActive 
+              ? 'cursor-pointer hover:text-green-300' 
+              : 'cursor-not-allowed opacity-50 text-gray-400'
+          }`}
+          onClick={() => subscriptionActive && router.push("/pages/homeScreen")}
         >
           home
         </span>
@@ -47,8 +53,12 @@ export default function Navbar() {
           search
         </span> */}
         <span
-          className="material-symbols-outlined text-lg cursor-pointer hover:text-green-300 transition"
-          onClick={() => router.push("/pages/settings")}
+          className={`material-symbols-outlined text-lg transition ${
+            subscriptionActive 
+              ? 'cursor-pointer hover:text-green-300' 
+              : 'cursor-not-allowed opacity-50 text-gray-400'
+          }`}
+          onClick={() => subscriptionActive && router.push("/pages/settings")}
         >
           settings
         </span>

@@ -1,4 +1,5 @@
 import "./globals.css";
+import { SubscriptionProvider } from "./contexts/SubscriptionContext";
 
 export const metadata = {
   title: "Geo-Note-Admin",
@@ -15,7 +16,9 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        {children}
+        <SubscriptionProvider>
+          {children}
+        </SubscriptionProvider>
       </body>
     </html>
   );
