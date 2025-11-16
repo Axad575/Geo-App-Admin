@@ -198,169 +198,260 @@ const ProjectPage = ({ projectId, orgId }) => {
             const margin = 20;
             let yPosition = margin;
 
-            // Заголовок
-            pdf.setFontSize(20);
-            pdf.setFont('helvetica', 'bold');
-            pdf.text(project.title || t('projects.projectReport'), margin, yPosition);
-            yPosition += 15;
+            // Helper function to add section divider
+            const addDivider = () => {
+                pdf.setDrawColor(220, 220, 220);
+                pdf.setLineWidth(0.5);
+                pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+                yPosition += 8;
+            };
 
-            // Дата создания отчета
+            // Helper function to check page break
+            const checkPageBreak = (requiredSpace = 40) => {
+                if (yPosition > pageHeight - requiredSpace) {
+                    pdf.addPage();
+                    yPosition = margin;
+                    return true;
+                }
+                return false;
+            };
+
+            // Header with background
+            pdf.setFillColor(34, 139, 34);
+            pdf.rect(0, 0, pageWidth, 45, 'F');
+            
+            pdf.setTextColor(255, 255, 255);
+            pdf.setFontSize(24);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(project.title || 'Project Report', margin, 25);
+            
+            pdf.setFontSize(11);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(`Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, margin, 35);
+            
+            yPosition = 55;
+            pdf.setTextColor(0, 0, 0);
+
+            // Project Overview Section
+            pdf.setFontSize(16);
+            pdf.setFont('helvetica', 'bold');
+            pdf.setTextColor(34, 139, 34);
+            pdf.text('PROJECT OVERVIEW', margin, yPosition);
+            yPosition += 10;
+            pdf.setTextColor(0, 0, 0);
+            addDivider();
+
+            // Description
+            pdf.setFontSize(11);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('Description:', margin, yPosition);
+            yPosition += 7;
+            
             pdf.setFontSize(10);
             pdf.setFont('helvetica', 'normal');
-            pdf.text(`Generated on: ${new Date().toLocaleDateString(getLocale())}`, margin, yPosition);
-            yPosition += 15;
-
-            // Описание проекта
-            pdf.setFontSize(14);
-            pdf.setFont('helvetica', 'bold');
-            pdf.text(t('projects.description') + ':', margin, yPosition);
-            yPosition += 8;
-            
-            pdf.setFontSize(11);
-            pdf.setFont('helvetica', 'normal');
-            const description = project.description || t('projects.noDescription');
+            const description = project.description || 'No description provided';
             const splitDescription = pdf.splitTextToSize(description, pageWidth - 2 * margin);
             pdf.text(splitDescription, margin, yPosition);
-            yPosition += splitDescription.length * 5 + 10;
+            yPosition += (splitDescription.length * 5) + 8;
 
-            // Даты проекта
-            pdf.setFontSize(14);
+            // Project Period
+            pdf.setFontSize(11);
             pdf.setFont('helvetica', 'bold');
             pdf.text('Project Period:', margin, yPosition);
-            yPosition += 8;
+            yPosition += 7;
             
-            pdf.setFontSize(11);
+            pdf.setFontSize(10);
             pdf.setFont('helvetica', 'normal');
             const projectPeriod = project.startDate && project.endDate
-                ? `${formatDate(project.startDate)} - ${formatDate(project.endDate)}`
+                ? `${formatDate(project.startDate)} to ${formatDate(project.endDate)}`
                 : project.startDate
-                    ? `From: ${formatDate(project.startDate)}`
-                    : 'No dates specified';
+                    ? `Starting: ${formatDate(project.startDate)}`
+                    : 'Not specified';
             pdf.text(projectPeriod, margin, yPosition);
-            yPosition += 15;
+            yPosition += 10;
 
-            // Статус
-            pdf.setFontSize(14);
-            pdf.setFont('helvetica', 'bold');
-            pdf.text(t('projects.status') + ':', margin, yPosition);
-            yPosition += 8;
-            
+            // Status
             pdf.setFontSize(11);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('Status:', margin, yPosition);
+            yPosition += 7;
+            
+            pdf.setFontSize(10);
             pdf.setFont('helvetica', 'normal');
-            pdf.text(project.status || t('meetings.noStatus'), margin, yPosition);
-            yPosition += 15;
+            pdf.text(project.status || 'Not specified', margin, yPosition);
+            yPosition += 12;
 
-            // Участники
+            // Participants Section
             if (project.participants && project.participants.length > 0) {
-                pdf.setFontSize(14);
-                pdf.setFont('helvetica', 'bold');
-                pdf.text('Participants:', margin, yPosition);
-                yPosition += 8;
+                checkPageBreak(50);
                 
-                pdf.setFontSize(11);
+                pdf.setFontSize(16);
+                pdf.setFont('helvetica', 'bold');
+                pdf.setTextColor(34, 139, 34);
+                pdf.text('TEAM MEMBERS', margin, yPosition);
+                yPosition += 10;
+                pdf.setTextColor(0, 0, 0);
+                addDivider();
+                
+                pdf.setFontSize(10);
                 pdf.setFont('helvetica', 'normal');
                 project.participants.forEach((participantId) => {
                     pdf.text(`• ${users[participantId] || participantId}`, margin + 5, yPosition);
                     yPosition += 6;
                 });
-                yPosition += 10;
+                yPosition += 8;
             }
 
-            // Заметки
+            // Notes Section
             if (project.notes && project.notes.length > 0) {
-                // Проверка на новую страницу
-                if (yPosition > pageHeight - 50) {
-                    pdf.addPage();
-                    yPosition = margin;
-                }
+                checkPageBreak(50);
 
-                pdf.setFontSize(14);
+                pdf.setFontSize(16);
                 pdf.setFont('helvetica', 'bold');
-                pdf.text('Notes:', margin, yPosition);
+                pdf.setTextColor(34, 139, 34);
+                pdf.text('FIELD NOTES', margin, yPosition);
                 yPosition += 10;
+                pdf.setTextColor(0, 0, 0);
+                addDivider();
 
                 project.notes.forEach((note, index) => {
-                    // Проверка на новую страницу
-                    if (yPosition > pageHeight - 40) {
-                        pdf.addPage();
-                        yPosition = margin;
-                    }
+                    checkPageBreak(40);
 
+                    // Calculate content first
+                    const titleText = `${index + 1}. ${note.title || note.text}`;
+                    let contentHeight = 7; // Title height
+                    
+                    let splitNote = [];
+                    if (note.description) {
+                        pdf.setFontSize(10);
+                        splitNote = pdf.splitTextToSize(note.description, pageWidth - 2 * margin - 10);
+                        contentHeight += (splitNote.length * 5);
+                    }
+                    
+                    if (note.location) {
+                        contentHeight += 5; // Location height
+                    }
+                    
+                    contentHeight += 5; // Author line height
+                    contentHeight += 5; // Bottom padding
+
+                    // Draw box with calculated height
+                    pdf.setFillColor(245, 245, 245);
+                    pdf.rect(margin, yPosition - 3, pageWidth - 2 * margin, contentHeight, 'F');
+
+                    // Title
                     pdf.setFontSize(12);
                     pdf.setFont('helvetica', 'bold');
-                    pdf.text(`${index + 1}. ${note.title || note.text}`, margin, yPosition);
-                    yPosition += 8;
+                    pdf.setTextColor(0, 0, 0);
+                    pdf.text(titleText, margin + 3, yPosition + 3);
+                    yPosition += 7;
 
+                    // Description
                     if (note.description) {
                         pdf.setFontSize(10);
                         pdf.setFont('helvetica', 'normal');
-                        const splitNote = pdf.splitTextToSize(note.description, pageWidth - 2 * margin - 5);
-                        pdf.text(splitNote, margin + 5, yPosition);
-                        yPosition += splitNote.length * 4;
+                        pdf.text(splitNote, margin + 3, yPosition);
+                        yPosition += (splitNote.length * 5);
                     }
 
+                    // Location
                     if (note.location) {
                         pdf.setFontSize(9);
                         pdf.setFont('helvetica', 'italic');
-                        pdf.text(`Location: ${note.location.name} (${note.location.latitude}, ${note.location.longitude})`, margin + 5, yPosition);
+                        pdf.setTextColor(100, 100, 100);
+                        pdf.text(`Location: ${note.location.name} (${Number(note.location.latitude).toFixed(6)}, ${Number(note.location.longitude).toFixed(6)})`, margin + 3, yPosition);
                         yPosition += 5;
                     }
 
+                    // Author
                     pdf.setFontSize(8);
                     pdf.setFont('helvetica', 'normal');
-                    pdf.text(`By: ${note.authorName} on ${formatDate(note.createdAt)}`, margin + 5, yPosition);
+                    pdf.setTextColor(100, 100, 100);
+                    pdf.text(`Author: ${note.authorName} | Date: ${formatDate(note.createdAt)}`, margin + 3, yPosition);
+                    pdf.setTextColor(0, 0, 0);
                     yPosition += 10;
                 });
             }
 
-            // Локации
+            // Locations Section
             if (project.locations && project.locations.length > 0) {
-                // Проверка на новую страницу
-                if (yPosition > pageHeight - 50) {
-                    pdf.addPage();
-                    yPosition = margin;
-                }
+                checkPageBreak(50);
 
-                pdf.setFontSize(14);
+                pdf.setFontSize(16);
                 pdf.setFont('helvetica', 'bold');
-                pdf.text('Location Points:', margin, yPosition);
+                pdf.setTextColor(34, 139, 34);
+                pdf.text('LOCATION POINTS', margin, yPosition);
                 yPosition += 10;
+                pdf.setTextColor(0, 0, 0);
+                addDivider();
 
                 project.locations.forEach((location, index) => {
-                    // Проверка на новую страницу
-                    if (yPosition > pageHeight - 30) {
-                        pdf.addPage();
-                        yPosition = margin;
-                    }
+                    checkPageBreak(35);
 
+                    // Calculate content height
+                    const titleText = `${index + 1}. ${location.name}`;
+                    let contentHeight = 6; // Title height
+                    
+                    let splitLocation = [];
+                    if (location.description) {
+                        pdf.setFontSize(10);
+                        splitLocation = pdf.splitTextToSize(location.description, pageWidth - 2 * margin - 10);
+                        contentHeight += (splitLocation.length * 5);
+                    }
+                    
+                    contentHeight += 5; // Coordinates height
+                    contentHeight += 5; // Author line height
+                    contentHeight += 4; // Bottom padding
+
+                    // Draw box with calculated height
+                    pdf.setFillColor(250, 250, 250);
+                    pdf.rect(margin, yPosition - 3, pageWidth - 2 * margin, contentHeight, 'F');
+
+                    // Title
                     pdf.setFontSize(11);
                     pdf.setFont('helvetica', 'bold');
-                    pdf.text(`${index + 1}. ${location.name}`, margin, yPosition);
+                    pdf.setTextColor(0, 0, 0);
+                    pdf.text(titleText, margin + 3, yPosition + 3);
                     yPosition += 6;
 
+                    // Description
                     if (location.description) {
                         pdf.setFontSize(10);
                         pdf.setFont('helvetica', 'normal');
-                        const splitLocation = pdf.splitTextToSize(location.description, pageWidth - 2 * margin - 5);
-                        pdf.text(splitLocation, margin + 5, yPosition);
-                        yPosition += splitLocation.length * 4;
+                        pdf.text(splitLocation, margin + 3, yPosition);
+                        yPosition += (splitLocation.length * 5);
                     }
 
+                    // Coordinates
                     pdf.setFontSize(9);
                     pdf.setFont('helvetica', 'normal');
-                    pdf.text(`Coordinates: ${Number(location.latitude).toFixed(6)}, ${Number(location.longitude).toFixed(6)}`, margin + 5, yPosition);
+                    pdf.setTextColor(50, 50, 50);
+                    pdf.text(`Coordinates: ${Number(location.latitude).toFixed(6)}, ${Number(location.longitude).toFixed(6)}`, margin + 3, yPosition);
                     yPosition += 5;
 
+                    // Author
                     pdf.setFontSize(8);
                     pdf.setFont('helvetica', 'italic');
-                    pdf.text(`Added by: ${location.authorName} on ${formatDate(location.createdAt)}`, margin + 5, yPosition);
-                    yPosition += 10;
+                    pdf.setTextColor(100, 100, 100);
+                    pdf.text(`Added by: ${location.authorName} | ${formatDate(location.createdAt)}`, margin + 3, yPosition);
+                    pdf.setTextColor(0, 0, 0);
+                    yPosition += 9;
                 });
-
             }
 
-            // Сохранение файла
-            const fileName = `${project.title || 'project'}_report_${new Date().toISOString().split('T')[0]}.pdf`;
+            // Footer on last page
+            const totalPages = pdf.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                pdf.setPage(i);
+                pdf.setFontSize(8);
+                pdf.setFont('helvetica', 'normal');
+                pdf.setTextColor(150, 150, 150);
+                pdf.text(`Page ${i} of ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+                pdf.text('Generated by GeoNote © 2025', pageWidth - margin, pageHeight - 10, { align: 'right' });
+            }
+
+            // Save file
+            const fileName = `${project.title.replace(/[^a-z0-9]/gi, '_')}_report_${new Date().toISOString().split('T')[0]}.pdf`;
             pdf.save(fileName);
 
         } catch (error) {
