@@ -79,7 +79,7 @@ export default function Home() {
           if (hasActiveSubscription) {
             router.push('/pages/homeScreen');
           } else {
-            router.push('/pages/noSubscription');
+            router.push('/pages/subscription');
           
         }
         break;

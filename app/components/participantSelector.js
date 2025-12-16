@@ -1,20 +1,26 @@
 "use client";
 import { useState, useEffect, useMemo } from 'react';
+import { useStrings } from "@/app/hooks/useStrings";
 
 const ParticipantSelector = ({
     users = [],
     selectedParticipants = [],
     onParticipantsChange,
-    excludeUserIds = [], // Исключить определенных пользователей (например, организатора)
+    excludeUserIds = [],
     maxHeight = "200px",
-    placeholder = "Поиск участников...",
-    label = "Участники",
+    placeholder = "",
+    label = "",
     showSelectedCount = true,
     allowMultiple = true,
     className = ""
 }) => {
+    const { t } = useStrings();
     const [searchQuery, setSearchQuery] = useState('');
     const [isExpanded, setIsExpanded] = useState(false);
+
+    // Используем локализованные значения по умолчанию, если пропсы не переданы
+    const effectivePlaceholder = placeholder || t('participantSelector.searchPlaceholder');
+    const effectiveLabel = label || t('participantSelector.participants');
 
     // Фильтрация пользователей по поиску
     const filteredUsers = useMemo(() => {
@@ -84,10 +90,10 @@ const ParticipantSelector = ({
             {/* Заголовок и статистика */}
             <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-gray-700">
-                    {label}
+                    {effectiveLabel}
                     {showSelectedCount && selectedParticipants.length > 0 && (
                         <span className="ml-2 text-blue-600 font-normal">
-                            ({selectedParticipants.length} выбрано)
+                            ({selectedParticipants.length} {t('participantSelector.selected')})
                         </span>
                     )}
                 </label>
@@ -97,7 +103,7 @@ const ParticipantSelector = ({
                         onClick={clearAllParticipants}
                         className="text-sm text-red-600 hover:text-red-800"
                     >
-                        Очистить все
+                        {t('participantSelector.clearAll')}
                     </button>
                 )}
             </div>
@@ -110,7 +116,7 @@ const ParticipantSelector = ({
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onFocus={() => setIsExpanded(true)}
-                        placeholder={placeholder}
+                        placeholder={effectivePlaceholder}
                         className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -170,7 +176,10 @@ const ParticipantSelector = ({
                         <div className="overflow-y-auto p-2" style={{ maxHeight }}>
                             {filteredUsers.length === 0 ? (
                                 <div className="px-3 py-2 text-sm text-gray-500 text-center">
-                                    {searchQuery ? 'Участники не найдены' : 'Нет доступных участников'}
+                                    {searchQuery 
+                                        ? t('participantSelector.noParticipantsFound')
+                                        : t('participantSelector.noAvailableParticipants')
+                                    }
                                 </div>
                             ) : (
                                 <div className="space-y-1">
@@ -230,7 +239,7 @@ const ParticipantSelector = ({
                                 onClick={() => setIsExpanded(false)}
                                 className="w-full text-sm text-gray-600 hover:text-gray-800 py-1"
                             >
-                                Свернуть
+                                {t('participantSelector.collapse')}
                             </button>
                         </div>
                     </div>
@@ -240,7 +249,7 @@ const ParticipantSelector = ({
             {/* Статистика поиска */}
             {searchQuery && (
                 <div className="text-xs text-gray-500">
-                    Найдено: {filteredUsers.length} из {users.filter(u => !excludeUserIds.includes(u.id)).length}
+                    {t('participantSelector.found')}: {filteredUsers.length} {t('participantSelector.of')} {users.filter(u => !excludeUserIds.includes(u.id)).length}
                 </div>
             )}
 
