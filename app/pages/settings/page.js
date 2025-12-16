@@ -6,12 +6,12 @@ import { app, db } from "@/app/api/firebase";
 import { collection, getDocs, doc, getDoc, updateDoc } from "firebase/firestore";
 import Sidebar from "@/app/components/sidebar";
 import Navbar from "@/app/components/navbar";
-import { useStrings, changeLanguage } from "@/app/hooks/useStrings";
+import { useStrings } from "@/app/hooks/useStrings";
 
 export default function Settings() {
     const router = useRouter();
     const auth = getAuth(app);
-    const { t, language } = useStrings();
+    const { t } = useStrings();
     const [currentUser, setCurrentUser] = useState(null);
     const [orgId, setOrgId] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -29,9 +29,6 @@ export default function Settings() {
     const [activeTab, setActiveTab] = useState('profile');
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
-    const [appSettings, setAppSettings] = useState({
-        language: 'ru'
-    });
 
     // Получение текущей организации пользователя
     const getCurrentUserOrg = async (userId) => {
@@ -75,24 +72,12 @@ export default function Settings() {
             }
         });
 
-        // Загружаем настройки приложения из localStorage
-        const savedLanguage = localStorage.getItem('app-language') || 'ru';
-        setAppSettings({
-            language: savedLanguage
-        });
-
         return () => unsubscribe();
     }, [router]);
 
     const showMessage = (type, text) => {
         setMessage({ type, text });
         setTimeout(() => setMessage({ type: '', text: '' }), 5000);
-    };
-
-    const handleLanguageChange = (newLanguage) => {
-        setAppSettings(prev => ({ ...prev, language: newLanguage }));
-        changeLanguage(newLanguage);
-        showMessage('success', t('settings.languageChanged'));
     };
 
     const handleProfileUpdate = async (e) => {
@@ -116,10 +101,10 @@ export default function Settings() {
                 });
             }
 
-            showMessage('success', 'Профиль успешно обновлен!');
+            showMessage('success', t('settings.profileUpdated'));
         } catch (error) {
             console.error('Error updating profile:', error);
-            showMessage('error', 'Ошибка при обновлении профиля');
+            showMessage('error', t('settings.profileUpdateError'));
         } finally {
             setSaving(false);
         }
@@ -129,12 +114,12 @@ export default function Settings() {
         e.preventDefault();
         
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            showMessage('error', 'Новые пароли не совпадают');
+            showMessage('error', t('settings.passwordMismatch'));
             return;
         }
 
         if (passwordData.newPassword.length < 6) {
-            showMessage('error', 'Пароль должен содержать минимум 6 символов');
+            showMessage('error', t('settings.passwordTooShort'));
             return;
         }
 
@@ -143,10 +128,10 @@ export default function Settings() {
         try {
             await updatePassword(currentUser, passwordData.newPassword);
             setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-            showMessage('success', 'Пароль успешно изменен!');
+            showMessage('success', t('settings.passwordChanged'));
         } catch (error) {
             console.error('Error updating password:', error);
-            showMessage('error', 'Ошибка при изменении пароля');
+            showMessage('error', t('settings.passwordChangeError'));
         } finally {
             setSaving(false);
         }
@@ -225,16 +210,6 @@ export default function Settings() {
                                         }`}
                                     >
                                         {t('settings.organization')}
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('appearance')}
-                                        className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                                            activeTab === 'appearance'
-                                                ? 'border-green-500 text-green-600'
-                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                        }`}
-                                    >
-                                        {t('settings.appearance')}
                                     </button>
                                 </nav>
                             </div>
@@ -397,61 +372,6 @@ export default function Settings() {
                                                 <p className="text-sm text-gray-600">
                                                     <span className="font-medium">{t('settings.year')}:</span> 2025
                                                 </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Appearance Tab */}
-                                {activeTab === 'appearance' && (
-                                    <div className="space-y-6">
-                                        <div>
-                                            <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                                {t('settings.interfaceLanguage')}
-                                            </h3>
-                                            <div className="space-y-3">
-                                                <div className="flex items-center">
-                                                    <input
-                                                        type="radio"
-                                                        id="lang-ru"
-                                                        name="language"
-                                                        value="ru"
-                                                        checked={appSettings.language === 'ru'}
-                                                        onChange={(e) => handleLanguageChange(e.target.value)}
-                                                        className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                                                    />
-                                                    <label htmlFor="lang-ru" className="ml-3 block text-sm font-medium text-gray-700 cursor-pointer">
-                                                        🇷🇺 Русский
-                                                    </label>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <input
-                                                        type="radio"
-                                                        id="lang-en"
-                                                        name="language"
-                                                        value="en"
-                                                        checked={appSettings.language === 'en'}
-                                                        onChange={(e) => handleLanguageChange(e.target.value)}
-                                                        className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                                                    />
-                                                    <label htmlFor="lang-en" className="ml-3 block text-sm font-medium text-gray-700 cursor-pointer">
-                                                        🇺🇸 English
-                                                    </label>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <input
-                                                        type="radio"
-                                                        id="lang-uz"
-                                                        name="language"
-                                                        value="uz"
-                                                        checked={appSettings.language === 'uz'}
-                                                        onChange={(e) => handleLanguageChange(e.target.value)}
-                                                        className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                                                    />
-                                                    <label htmlFor="lang-uz" className="ml-3 block text-sm font-medium text-gray-700 cursor-pointer">
-                                                        🇺🇿 O'zbekcha
-                                                    </label>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>

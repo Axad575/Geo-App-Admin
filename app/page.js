@@ -73,20 +73,14 @@ export default function Home() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       while (auth.currentUser) {
-        if (!auth.currentUser.emailVerified) {
-          await sendEmailVerification(auth.currentUser);
-          window.alert(t('auth.emailVerification'));
-          await auth.signOut();
-          router.push('/');
-        } else {
-          // Проверяем подписку перед переходом
+         // Проверяем подписку перед переходом
           const hasActiveSubscription = await checkSubscription(auth.currentUser.uid);
           
           if (hasActiveSubscription) {
             router.push('/pages/homeScreen');
           } else {
-            router.push('/pages/subscription');
-          }
+            router.push('/pages/noSubscription');
+          
         }
         break;
       }
@@ -97,57 +91,57 @@ export default function Home() {
     }
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    const name = e.target.name.value;
-    const email = e.target.email.value;
-    const password = e.target.password.value;
-    const confirmPassword = e.target.confirmPassword.value;
+  // const handleRegister = async (e) => {
+  //   e.preventDefault();
+  //   const name = e.target.name.value;
+  //   const email = e.target.email.value;
+  //   const password = e.target.password.value;
+  //   const confirmPassword = e.target.confirmPassword.value;
 
-    if (password !== confirmPassword) {
-      window.alert(t('auth.passwordMismatch'));
-      return;
-    }
+  //   if (password !== confirmPassword) {
+  //     window.alert(t('auth.passwordMismatch'));
+  //     return;
+  //   }
 
-    if (password.length < 6) {
-      window.alert(t('auth.passwordTooShort'));
-      return;
-    }
+  //   if (password.length < 6) {
+  //     window.alert(t('auth.passwordTooShort'));
+  //     return;
+  //   }
 
-    setLoading(true);
+  //   setLoading(true);
     
-    try {
-      // Создаем пользователя
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+  //   try {
+  //     // Создаем пользователя
+  //     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  //     const user = userCredential.user;
 
-      // Обновляем профиль пользователя
-      await updateProfile(user, {
-        displayName: name
-      });
+  //     // Обновляем профиль пользователя
+  //     await updateProfile(user, {
+  //       displayName: name
+  //     });
 
-      // Сохраняем данные пользователя в Firestore
-      await setDoc(doc(db, 'users', user.uid), {
-        name: name,
-        email: email,
-        createdAt: new Date(),
-        role: 'user',
-        organizationId: null
-      });
+  //     // Сохраняем данные пользователя в Firestore
+  //     await setDoc(doc(db, 'users', user.uid), {
+  //       name: name,
+  //       email: email,
+  //       createdAt: new Date(),
+  //       role: 'user',
+  //       organizationId: null
+  //     });
 
-      // Отправляем письмо для подтверждения
-      await sendEmailVerification(user);
+  //     // Отправляем письмо для подтверждения
+  //     await sendEmailVerification(user);
       
-      window.alert(t('auth.registerSuccess') + ' ' + t('auth.emailVerification'));
-      await auth.signOut();
-      setIsLogin(true); // Переключаем на форму входа
+  //     window.alert(t('auth.registerSuccess') + ' ' + t('auth.emailVerification'));
+  //     await auth.signOut();
+  //     setIsLogin(true); // Переключаем на форму входа
       
-    } catch (error) {
-      window.alert(t('auth.registerError') + ': ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   } catch (error) {
+  //     window.alert(t('auth.registerError') + ': ' + error.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-between p-24 bg-white">
@@ -175,7 +169,7 @@ export default function Home() {
           {t('auth.login')}
         </button>
         <p className="text-sm text-center text-gray-600">{t('auth.termsText')}</p>
-        <p className="text-sm text-center text-gray-600">abdu1axad © 2025</p>
+        <p className="text-sm text-center text-gray-600">abdu1axad and dantajd © 2025</p>
       </form>
       </div>
     </div>
